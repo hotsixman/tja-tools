@@ -18,15 +18,15 @@ export class CourseRenderer {
         const { ctx } = this.coursePlayer;
         switch (renderingData.type) {
             case CourseRenderer.RENDERING_DATA_TYPE.BAR: {
-                if (renderingData.x < 0 - this.coursePlayer.noteRadius * 2 || renderingData.x > this.coursePlayer.width + this.coursePlayer.noteRadius * 2 || !renderingData.bar.barline) return;
+                if (renderingData.x < 0 - this.coursePlayer.noteRadius * 2 || renderingData.x > this.coursePlayer.width + this.coursePlayer.noteRadius * 2 || !renderingData.bar.barline) return false;
                 ctx.fillStyle = "white";
                 ctx.fillRect(renderingData.x - 1, 0, 2, this.coursePlayer.height);
-                return;
+                return true;
             }
             case CourseRenderer.RENDERING_DATA_TYPE.NORMAL: {
                 let isBig = renderingData.noteType === 3 || renderingData.noteType === 4;
                 let radius = isBig ? this.coursePlayer.noteRadius * 1.3 : this.coursePlayer.noteRadius;
-                if (renderingData.x < 0 - radius * 2 || renderingData.x > this.coursePlayer.width + radius * 2) return;
+                if (renderingData.x < 0 - radius * 2 || renderingData.x > this.coursePlayer.width + radius * 2) return false;
                 let color = renderingData.noteType % 2 === 0 ? '#42bfbd' : '#f84927';
                 // 검은색 테두리
                 ctx.beginPath();
@@ -49,12 +49,12 @@ export class CourseRenderer {
                 ctx.fillStyle = color ?? '';
                 ctx.fill();
                 ctx.closePath();
-                return;
+                return true;
             }
             case CourseRenderer.RENDERING_DATA_TYPE.ROLL: {
                 let isBig = renderingData.noteType === 6;
                 let radius = isBig ? this.coursePlayer.noteRadius * 1.3 : this.coursePlayer.noteRadius;
-                if (renderingData.endX < 0 - radius * 2 || renderingData.startX > this.coursePlayer.width + radius * 2) return;
+                if (renderingData.endX < 0 - radius * 2 || renderingData.startX > this.coursePlayer.width + radius * 2) return false;
 
                 const startX = Math.max(renderingData.startX, 0);
                 const endX = Math.min(renderingData.endX, this.coursePlayer.width);
@@ -103,7 +103,7 @@ export class CourseRenderer {
                 ctx.fillStyle = color;
                 ctx.fill();
                 ctx.closePath();
-                return;
+                return true;
             }
             case CourseRenderer.RENDERING_DATA_TYPE.BALLOON:{
                 let radius = this.coursePlayer.noteRadius;
@@ -111,7 +111,7 @@ export class CourseRenderer {
                 : renderingData.endX > this.coursePlayer.hitXCoor ? this.coursePlayer.hitXCoor
                 : renderingData.endX ;
 
-                if (x < 0 - radius * 2 || x > this.coursePlayer.width + radius * 2) return;
+                if (x < 0 - radius * 2 || x > this.coursePlayer.width + radius * 2) return false;
                 const color = '#f97900';
                 // 검은색 테두리
                 ctx.beginPath();
@@ -134,7 +134,7 @@ export class CourseRenderer {
                 ctx.fillStyle = color ?? '';
                 ctx.fill();
                 ctx.closePath();
-                return;
+                return true;
             }
         }
     }
