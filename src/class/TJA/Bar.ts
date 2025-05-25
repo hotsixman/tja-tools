@@ -8,7 +8,7 @@ export class Bar {
         const state: Bar.ParseState = {
             bpm: math.fraction(course.song.getBPM()),
             scroll: math.fraction(1),
-            barline: false,
+            barline: true,
             branch: 0,
             time: math.fraction(0),
             measure: { n: 4, d: 4 }
@@ -22,8 +22,11 @@ export class Bar {
         const entries: (Note | Command)[] = [];
         const notes: Note[] = [];
         const commands: Command[] = [];
-        let bpmInit = state.bpm;
-        let scrollInit = state.scroll;
+
+        let bpm = state.bpm;
+        let scroll = state.scroll;
+        let barline = state.barline;
+        let canChangeBarData = true;
 
         let length = 0;
         tempBar.forEach((part) => {
@@ -46,19 +49,33 @@ export class Bar {
                 switch (command.name) {
                     case "BPMCHANGE": {
                         state.bpm = math.fraction(Number(command.value));
+                        if(canChangeBarData) bpm = state.bpm;
                         break;
                     }
                     case "SCROLL": {
                         state.scroll = math.fraction(Number(command.value));
+                        if(canChangeBarData) scroll = state.scroll;
                         break;
                     }
                     case "MEASURE": {
                         const r = command.value.split('/');
                         state.measure = { n: Number(r[0]), d: Number(r[1]) };
+                        break;
+                    }
+                    case "BARLINEON":{
+                        state.barline = true;
+                        if(canChangeBarData) barline = state.barline;
+                        break;
+                    }
+                    case "BARLINEOFF":{
+                        state.barline = false;
+                        if(canChangeBarData) barline = state.barline;
+                        break;
                     }
                 }
             }
             else {
+                canChangeBarData = false;
                 for (const char of part.value) {
                     if (char === ',') break;
 
@@ -79,8 +96,9 @@ export class Bar {
             notes,
             commands,
             course,
-            bpm: bpmInit,
-            scroll: scrollInit
+            bpm,
+            scroll,
+            barline
         })
     }
 
@@ -89,6 +107,9 @@ export class Bar {
     notes: Note[];
     commands: Command[];
     course: Course;
+    bpm: math.Fraction;
+    scroll: math.Fraction;
+    barline: boolean
 
     private constructor(data: Bar.ConstructorData) {
         this.entries = data.entries;
@@ -96,6 +117,9 @@ export class Bar {
         this.commands = data.commands;
         this.course = data.course;
         this.time = data.time;
+        this.bpm = data.bpm;
+        this.scroll = data.scroll;
+        this.barline = data.barline;
     }
 
     toJSON() {
@@ -117,6 +141,7 @@ export namespace Bar {
         course: Course;
         bpm: math.Fraction;
         scroll: math.Fraction;
+        barline: boolean;
     }
 
     export type TempBar = ({ type: 'notes' | 'command', value: string })[];

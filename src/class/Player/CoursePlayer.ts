@@ -1,5 +1,6 @@
 import { Course } from "../TJA/Course.js"
 import { Note } from "../TJA/Note.js";
+import { CourseRenderer } from "./CourseRenderer.js";
 import { NoteRenderingObject } from "./NoteRenderingObject.js";
 
 export class CoursePlayer {
@@ -7,6 +8,7 @@ export class CoursePlayer {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     animationId: number | null = null;
+    courseRenderer: CourseRenderer;
 
     constructor(course: Course, option?: CoursePlayer.ConstructionOption) {
         this.course = course;
@@ -14,6 +16,8 @@ export class CoursePlayer {
         this.canvas.width = option?.width ?? 1000;
         this.canvas.height = this.height;
         this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
+        this.courseRenderer = new CourseRenderer(this);
+        this.canvas.style.backgroundColor = "#282828";
     }
 
     get width() {
@@ -36,49 +40,111 @@ export class CoursePlayer {
     play() {
         this.ctx.reset();
         let start: number;
-        let drawalbeNotes: Note[] = Array.from(this.course.notes);
+        const noteRenderingDatas: CourseRenderer.RenderingData[] = [];
+        const barRenderingData: CourseRenderer.BarRenderingData[] = [];
         const frameState: CoursePlayer.FrameState = { roll: null };
         const thisObject = this;
 
-        function frameRender(timeStamp: DOMHighResTimeStamp) {
-            if (drawalbeNotes.length === 0) {
-                console.log('stoped');
-                return;
-            }
-            if (!start) start = timeStamp;
+        let rollOrBalloonStart: Note | null = null;
+        this.course.bars.forEach((bar) => {
+            barRenderingData.push({
+                type: CourseRenderer.RENDERING_DATA_TYPE.BAR,
+                x: 0,
+                bar
+            });
+            bar.notes.forEach((note) => {
+                switch (note.type) {
+                    case 1: case 2: case 3: case 4: {
+                        return noteRenderingDatas.push({
+                            type: CourseRenderer.RENDERING_DATA_TYPE.NORMAL,
+                            x: 0,
+                            noteType: note.type,
+                            note
+                        })
+                    }
+                    case 5: case 6: case 7: {
+                        return rollOrBalloonStart = note;
+                    }
+                    case 8: {
+                        if (!rollOrBalloonStart) return;
+                        switch (rollOrBalloonStart.type) {
+                            case 5: case 6: {
+                                noteRenderingDatas.push({
+                                    type: CourseRenderer.RENDERING_DATA_TYPE.ROLL,
+                                    startX: 0,
+                                    endX: 0,
+                                    noteType: rollOrBalloonStart.type,
+                                    startNote: rollOrBalloonStart,
+                                    endNote: note
+                                });
+                                return rollOrBalloonStart = null;
+                            }
+                            case 7: {
+                                noteRenderingDatas.push({
+                                    type: CourseRenderer.RENDERING_DATA_TYPE.BALLOON,
+                                    startX: 0,
+                                    endX: 0,
+                                    noteType: rollOrBalloonStart.type,
+                                    startNote: rollOrBalloonStart,
+                                    endNote: note
+                                })
+                                return rollOrBalloonStart = null;
+                            }
+                        }
+                    }
+                }
+            })
+        })
 
+        function frameRender(timeStamp: DOMHighResTimeStamp) {
+            if (!start) start = timeStamp - thisObject.course.song.getOffset() * 1000;
             thisObject.ctx.reset();
             drawHit();
 
             const elapsed = timeStamp - start;
-            let newDrawableNotes: Note[] = [];
-            for (let i = drawalbeNotes.length - 1; i >= 0; i--) {
-                const note = drawalbeNotes[i];
-                const noteRenderingObject = new NoteRenderingObject({
-                    note,
+
+            barRenderingData.toReversed().forEach((renderingData) => {
+                let bar = renderingData.bar
+                renderingData.x = thisObject.courseRenderer.getXCoor({
                     elapsed,
-                    coursePlayer: thisObject
+                    bpm: bar.bpm,
+                    scroll: bar.scroll,
+                    time: bar.time
                 });
-
-                const [x, y, radius] = noteRenderingObject.getCanvasDrawingData(frameState);
-                if (x < 0 - radius * 2) {
-                    continue;
+                thisObject.courseRenderer.render(renderingData);
+            })
+            noteRenderingDatas.toReversed().forEach((renderingData) => {
+                switch (renderingData.type) {
+                    case 1: {
+                        let note = renderingData.note
+                        renderingData.x = thisObject.courseRenderer.getXCoor({
+                            elapsed,
+                            bpm: note.bpm,
+                            scroll: note.scroll,
+                            time: note.time
+                        });
+                        break;
+                    }
+                    case 2: case 3: {
+                        let startNote = renderingData.startNote;
+                        let endNote = renderingData.endNote;
+                        renderingData.startX = thisObject.courseRenderer.getXCoor({
+                            elapsed,
+                            bpm: startNote.bpm,
+                            scroll: startNote.scroll,
+                            time: startNote.time
+                        });
+                        renderingData.endX = thisObject.courseRenderer.getXCoor({
+                            elapsed,
+                            bpm: endNote.bpm,
+                            scroll: endNote.scroll,
+                            time: endNote.time
+                        });
+                        break;
+                    }
                 }
-                if(note.type === Note.NoteType.endroll){
-                    
-                }
-                if (x > thisObject.width + radius * 2) {
-                    newDrawableNotes.unshift(note);
-                    continue;
-                }
-                else {
-                    noteRenderingObject.draw(frameState, [x, y, radius]);
-                    newDrawableNotes.unshift(note);
-                }
-            }
-            //console.log(`time: ${drawalbeNotes[0].time}, notes: ${thisObject.course.notes.length - drawalbeNotes.length}`);
-            drawalbeNotes = newDrawableNotes;
-
+                thisObject.courseRenderer.render(renderingData);
+            });
             thisObject.animationId = requestAnimationFrame(frameRender);
         }
         this.animationId = requestAnimationFrame(frameRender);

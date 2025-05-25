@@ -2,7 +2,8 @@ import * as math from 'mathjs';
 
 export class Command {
     static parse(line: string, time: math.Fraction): Command {
-        const spaceIndex = line.indexOf(' ');
+        let spaceIndex = line.indexOf(' ');
+        if(spaceIndex === -1) spaceIndex = line.length;
 
         const name = line.slice(1, spaceIndex) as Command.Name;
         const value = line.slice(spaceIndex + 1);
