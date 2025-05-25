@@ -6,6 +6,12 @@
     "@types/node": "^22.15.21"
   },
   "dependencies": {
+    "gh-pages": "^6.3.0",
     "mathjs": "^14.4.0"
+  },
+  "scripts": {
+    "build": "cd ./page && npx vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   }
 }
