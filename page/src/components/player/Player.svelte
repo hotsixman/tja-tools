@@ -52,7 +52,7 @@
         const course = song?.courses?.[difficulty];
         if (!course) return;
         
-        coursePlayer = new CoursePlayer(course);
+        coursePlayer = new CoursePlayer(course, {width: 1920});
         playerContainer?.append(coursePlayer.canvas);
         coursePlayer.canvas.style.width = "100%";
 
