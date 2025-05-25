@@ -14,7 +14,7 @@
         const file = tjaInput?.files?.[0];
         if (!file || !tjaInput) return;
 
-        playerContainer?.replaceChildren();
+        stop();
         difficulty = null;
         coursePlayer = null;
 
@@ -47,7 +47,7 @@
         sourceNode.connect(audioContext.destination);
     }
 
-    function play() {
+    async function play() {
         //@ts-expect-error
         const course = song?.courses?.[difficulty];
         if (!course) return;
@@ -56,10 +56,13 @@
         playerContainer?.append(coursePlayer.canvas);
         coursePlayer.canvas.style.width = "100%";
 
+        await onAudioLoad();
+
         sourceNode?.start();
         coursePlayer.play();
     }
     function stop() {
+        playerContainer?.replaceChildren();
         coursePlayer?.stop();
         sourceNode?.stop();
     }
