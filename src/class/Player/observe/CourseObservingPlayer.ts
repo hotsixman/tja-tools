@@ -170,6 +170,9 @@ export class CourseObservingPlayer {
             if (canRenderNextFrame) {
                 thisObject.animationId = requestAnimationFrame(frameRender);
             }
+            else{
+                thisObject.stop();
+            }
         }
         this.animationId = requestAnimationFrame(frameRender);
         this.audioPlayer.play();
