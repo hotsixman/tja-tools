@@ -1,16 +1,24 @@
-import { Course } from "../TJA/Course.js"
-import { Note } from "../TJA/Note.js";
-import { CourseRenderer } from "./CourseRenderer.js";
-import { NoteRenderingObject } from "./NoteRenderingObject.js";
+import { Course } from "../../TJA/Course.js"
+import { Note } from "../../TJA/Note.js";
+import { CourseObservingAudioPlayer } from "./CourseObservingAudioPlayer.js";
+import { CourseRenderer } from "./CourseObservingRenderer.js";
+import * as math from 'mathjs';
 
-export class CoursePlayer {
+export class CourseObservingPlayer {
     course: Course;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     animationId: number | null = null;
     courseRenderer: CourseRenderer;
+    audioPlayer: CourseObservingAudioPlayer;
+    branch: 0 | 1 | 2 | 3 = 1;
+    isPlaying: boolean = false;
+    playingOption: CourseObservingPlayer.PlayingOption = {
+        speed: 1.1,
+        noScroll: false
+    }
 
-    constructor(course: Course, option?: CoursePlayer.ConstructionOption) {
+    constructor(course: Course, option?: CourseObservingPlayer.ConstructionOption) {
         this.course = course;
         this.canvas = document.createElement('canvas');
         this.canvas.width = option?.width ?? 1000;
@@ -18,6 +26,7 @@ export class CoursePlayer {
         this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
         this.courseRenderer = new CourseRenderer(this);
         this.canvas.style.backgroundColor = "#282828";
+        this.audioPlayer = new CourseObservingAudioPlayer(this);
     }
 
     get width() {
@@ -36,13 +45,25 @@ export class CoursePlayer {
     get noteRadius() {
         return this.width * 320 / 237 * 87 / 3200;
     }
+    get yCoor() {
+        return this.height / 2;
+    }
+    get speed(){
+        return this.playingOption.speed;
+    }
+    set speed(speed: number){
+        this.playingOption.speed = speed;
+    }
+    setBranch(branch: 0 | 1 | 2 | 3) {
+        this.branch = branch;
+    }
 
     play() {
+        if(this.isPlaying) return;
         this.ctx.reset();
         let start: number;
         const noteRenderingDatas: CourseRenderer.RenderingData[] = [];
         const barRenderingData: CourseRenderer.BarRenderingData[] = [];
-        const frameState: CoursePlayer.FrameState = { roll: null };
         const thisObject = this;
 
         let rollOrBalloonStart: Note | null = null;
@@ -97,21 +118,22 @@ export class CoursePlayer {
         })
 
         function frameRender(timeStamp: DOMHighResTimeStamp) {
-            if (!start) start = timeStamp - thisObject.course.song.getOffset() * 1000;
+            if (!start) start = timeStamp - thisObject.course.song.getOffset() * 1000 + 1000;
             thisObject.ctx.reset();
             drawHit();
 
             const elapsed = timeStamp - start;
+            let canRenderNextFrame = false;
 
             barRenderingData.toReversed().forEach((renderingData) => {
                 let bar = renderingData.bar
                 renderingData.x = thisObject.courseRenderer.getXCoor({
                     elapsed,
                     bpm: bar.bpm,
-                    scroll: bar.scroll,
+                    scroll: thisObject.playingOption.noScroll ? math.fraction(1) : bar.scroll.valueOf() * thisObject.playingOption.speed,
                     time: bar.time
                 });
-                thisObject.courseRenderer.render(renderingData);
+                canRenderNextFrame = thisObject.courseRenderer.render(renderingData, thisObject.branch) || canRenderNextFrame;
             })
             noteRenderingDatas.toReversed().forEach((renderingData) => {
                 switch (renderingData.type) {
@@ -120,7 +142,7 @@ export class CoursePlayer {
                         renderingData.x = thisObject.courseRenderer.getXCoor({
                             elapsed,
                             bpm: note.bpm,
-                            scroll: note.scroll,
+                            scroll: thisObject.playingOption.noScroll ? math.fraction(1) : note.scroll.valueOf() * thisObject.playingOption.speed,
                             time: note.time
                         });
                         break;
@@ -131,23 +153,27 @@ export class CoursePlayer {
                         renderingData.startX = thisObject.courseRenderer.getXCoor({
                             elapsed,
                             bpm: startNote.bpm,
-                            scroll: startNote.scroll,
+                            scroll: thisObject.playingOption.noScroll ? math.fraction(1) : startNote.scroll.valueOf() * thisObject.playingOption.speed,
                             time: startNote.time
                         });
                         renderingData.endX = thisObject.courseRenderer.getXCoor({
                             elapsed,
                             bpm: endNote.bpm,
-                            scroll: endNote.scroll,
+                            scroll: thisObject.playingOption.noScroll ? math.fraction(1) : endNote.scroll.valueOf() * thisObject.playingOption.speed,
                             time: endNote.time
                         });
                         break;
                     }
                 }
-                thisObject.courseRenderer.render(renderingData);
+                canRenderNextFrame = thisObject.courseRenderer.render(renderingData, thisObject.branch) || canRenderNextFrame;
             });
-            thisObject.animationId = requestAnimationFrame(frameRender);
+            if (canRenderNextFrame) {
+                thisObject.animationId = requestAnimationFrame(frameRender);
+            }
         }
         this.animationId = requestAnimationFrame(frameRender);
+        this.audioPlayer.play();
+        this.isPlaying = true;
 
         function drawHit() {
             const { ctx } = thisObject;
@@ -162,13 +188,16 @@ export class CoursePlayer {
     }
 
     stop() {
+        if(!this.isPlaying) return;
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
         }
+        this.audioPlayer.stop();
+        this.isPlaying = false;
     }
 }
 
-export namespace CoursePlayer {
+export namespace CourseObservingPlayer {
     export type ConstructionOption = {
         width?: number;
     }
@@ -178,5 +207,9 @@ export namespace CoursePlayer {
     export type RollState = {
         x: number;
         y: number;
+    }
+    export type PlayingOption = {
+        speed: number;
+        noScroll: boolean;
     }
 }

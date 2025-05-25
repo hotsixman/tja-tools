@@ -2,12 +2,13 @@ import { ValueOf } from "../../types.js";
 import * as math from 'mathjs';
 
 export class Note {
-    static parse(noteText: string, bpm: math.Fraction, scroll: math.Fraction, time: math.Fraction) {
+    static parse(noteText: string, bpm: math.Fraction, scroll: math.Fraction, time: math.Fraction, branch: 0 | 1 | 2 | 3) {
         return new Note({
             type: Number(noteText) as ValueOf<typeof Note.NoteType>,
             bpm,
             scroll,
-            time
+            time,
+            branch
         })
     }
 
@@ -15,12 +16,14 @@ export class Note {
     bpm: math.Fraction;
     scroll: math.Fraction;
     time: math.Fraction;
+    branch: 0 | 1 | 2 | 3
 
     private constructor(data: Note.ConstructorData) {
         this.type = data.type;
         this.bpm = data.bpm;
         this.scroll = data.scroll;
         this.time = data.time;
+        this.branch = data.branch;
     }
 }
 
@@ -30,6 +33,7 @@ export namespace Note {
         bpm: math.Fraction;
         scroll: math.Fraction;
         time: math.Fraction;
+        branch: 0 | 1 | 2 | 3;
     }
 
     export namespace NoteType {

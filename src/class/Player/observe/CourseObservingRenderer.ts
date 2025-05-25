@@ -1,12 +1,12 @@
-import { ValueOf } from "../../types.js";
-import { Bar } from "../TJA/Bar.js";
-import { Note } from "../TJA/Note.js";
-import { CoursePlayer } from "./CoursePlayer.js";
+import { ValueOf } from "../../../types.js";
+import { Bar } from "../../TJA/Bar.js";
+import { Note } from "../../TJA/Note.js";
+import { CourseObservingPlayer } from "./CourseObservingPlayer.js";
 
 export class CourseRenderer {
-    coursePlayer: CoursePlayer
+    coursePlayer: CourseObservingPlayer
 
-    constructor(player: CoursePlayer) {
+    constructor(player: CourseObservingPlayer) {
         this.coursePlayer = player;
     }
 
@@ -14,19 +14,32 @@ export class CourseRenderer {
         return this.coursePlayer.hitXCoor + ((time.valueOf() - (elapsed / 1000)) * (this.coursePlayer.width) * (scroll.valueOf() * bpm.valueOf() / 240));
     }
 
-    render(renderingData: CourseRenderer.RenderingData) {
+    render(renderingData: CourseRenderer.RenderingData, branch: 0 | 1 | 2 | 3) {
         const { ctx } = this.coursePlayer;
         switch (renderingData.type) {
             case CourseRenderer.RENDERING_DATA_TYPE.BAR: {
-                if (renderingData.x < 0 - this.coursePlayer.noteRadius * 2 || renderingData.x > this.coursePlayer.width + this.coursePlayer.noteRadius * 2 || !renderingData.bar.barline) return false;
+                if (branch > 0 && renderingData.bar.branch > 0 && renderingData.bar.branch != branch) return false;
+
+                if (renderingData.x < 0 - this.coursePlayer.noteRadius * 2) {
+                    return false;
+                }
+                if (renderingData.x > this.coursePlayer.width + this.coursePlayer.noteRadius * 2 || !renderingData.bar.barline) {
+                    return true;
+                };
+
                 ctx.fillStyle = "white";
                 ctx.fillRect(renderingData.x - 1, 0, 2, this.coursePlayer.height);
                 return true;
             }
             case CourseRenderer.RENDERING_DATA_TYPE.NORMAL: {
+                if (branch > 0 && renderingData.note.branch > 0 && renderingData.note.branch != branch) return false;
+
                 let isBig = renderingData.noteType === 3 || renderingData.noteType === 4;
                 let radius = isBig ? this.coursePlayer.noteRadius * 1.3 : this.coursePlayer.noteRadius;
-                if (renderingData.x < 0 - radius * 2 || renderingData.x > this.coursePlayer.width + radius * 2) return false;
+
+                if (renderingData.x < 0 - radius * 2) return false;
+                if (renderingData.x > this.coursePlayer.width + radius * 2) return true;
+
                 let color = renderingData.noteType % 2 === 0 ? '#42bfbd' : '#f84927';
                 // 검은색 테두리
                 ctx.beginPath();
@@ -45,16 +58,20 @@ export class CourseRenderer {
                 // 안에
                 ctx.beginPath();
                 ctx.lineWidth = 0; // isBig ? radius * (1 - 1 / (4 * 1.3)) : radius * (1 - 1 / 4)
-                ctx.arc(renderingData.x, this.coursePlayer.height / 2, radius * 3 / 4 , 0, 2 * Math.PI);
+                ctx.arc(renderingData.x, this.coursePlayer.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
                 ctx.fillStyle = color ?? '';
                 ctx.fill();
                 ctx.closePath();
                 return true;
             }
             case CourseRenderer.RENDERING_DATA_TYPE.ROLL: {
+                if (branch > 0 && renderingData.startNote.branch > 0 && renderingData.startNote.branch != branch) return false;
+
                 let isBig = renderingData.noteType === 6;
                 let radius = isBig ? this.coursePlayer.noteRadius * 1.3 : this.coursePlayer.noteRadius;
-                if (renderingData.endX < 0 - radius * 2 || renderingData.startX > this.coursePlayer.width + radius * 2) return false;
+
+                if (renderingData.endX < 0 - radius * 2) return false;
+                if (renderingData.startX > this.coursePlayer.width + radius * 2) return true;
 
                 const startX = Math.max(renderingData.startX, 0);
                 const endX = Math.min(renderingData.endX, this.coursePlayer.width);
@@ -99,19 +116,23 @@ export class CourseRenderer {
                 // 안에
                 ctx.beginPath();
                 ctx.lineWidth = 0;
-                ctx.arc(renderingData.startX, this.coursePlayer.height / 2, radius * 3 / 4 , 0, 2 * Math.PI);
+                ctx.arc(renderingData.startX, this.coursePlayer.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
                 ctx.fill();
                 ctx.closePath();
                 return true;
             }
-            case CourseRenderer.RENDERING_DATA_TYPE.BALLOON:{
-                let radius = this.coursePlayer.noteRadius;
-                const x = renderingData.startX > this.coursePlayer.hitXCoor ? renderingData.startX 
-                : renderingData.endX > this.coursePlayer.hitXCoor ? this.coursePlayer.hitXCoor
-                : renderingData.endX ;
+            case CourseRenderer.RENDERING_DATA_TYPE.BALLOON: {
+                if (branch > 0 && renderingData.startNote.branch > 0 && renderingData.startNote.branch != branch) return false;
 
-                if (x < 0 - radius * 2 || x > this.coursePlayer.width + radius * 2) return false;
+                let radius = this.coursePlayer.noteRadius;
+                const x = renderingData.startX > this.coursePlayer.hitXCoor ? renderingData.startX
+                    : renderingData.endX > this.coursePlayer.hitXCoor ? this.coursePlayer.hitXCoor
+                        : renderingData.endX;
+
+                if (x < 0 - radius * 2) return false;
+                if (x > this.coursePlayer.width + radius * 2) return true;
+
                 const color = '#f97900';
                 // 검은색 테두리
                 ctx.beginPath();
@@ -130,11 +151,14 @@ export class CourseRenderer {
                 // 안에
                 ctx.beginPath();
                 ctx.lineWidth = 0; // isBig ? radius * (1 - 1 / (4 * 1.3)) : radius * (1 - 1 / 4)
-                ctx.arc(x, this.coursePlayer.height / 2, radius * 3 / 4 , 0, 2 * Math.PI);
+                ctx.arc(x, this.coursePlayer.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
                 ctx.fillStyle = color ?? '';
                 ctx.fill();
                 ctx.closePath();
                 return true;
+            }
+            default: {
+                return false;
             }
         }
     }
@@ -181,8 +205,8 @@ export namespace CourseRenderer {
 
     export type GetCoorParam = {
         elapsed: number,
-        bpm: math.Fraction,
-        scroll: math.Fraction,
-        time: math.Fraction
+        bpm: math.Fraction | number,
+        scroll: math.Fraction | number,
+        time: math.Fraction | number
     }
 }

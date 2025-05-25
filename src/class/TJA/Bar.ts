@@ -10,8 +10,9 @@ export class Bar {
             scroll: math.fraction(1),
             barline: true,
             branch: 0,
+            branchTime: null,
             time: math.fraction(0),
-            measure: { n: 4, d: 4 }
+            measure: { n: 4, d: 4 },
         }
 
         const bars: Bar[] = tempBars.map((tempBar) => Bar.parse(tempBar, state, course));
@@ -23,10 +24,12 @@ export class Bar {
         const notes: Note[] = [];
         const commands: Command[] = [];
 
+        let time = state.time;
         let bpm = state.bpm;
         let scroll = state.scroll;
         let barline = state.barline;
         let canChangeBarData = true;
+        let branch = state.branch;
 
         let length = 0;
         tempBar.forEach((part) => {
@@ -40,7 +43,6 @@ export class Bar {
             }
         });
 
-        const time = state.time;
         tempBar.forEach((part) => {
             if (part.type === "command") {
                 const command = Command.parse(part.value, state.time);
@@ -72,6 +74,39 @@ export class Bar {
                         if(canChangeBarData) barline = state.barline;
                         break;
                     }
+                    case "BRANCHSTART":{
+                        state.branch = 0;
+                        state.branchTime = state.time;
+                        if(canChangeBarData) branch = state.branch;
+                        break;
+                    }
+                    case "N":{
+                        state.time = state.branchTime;
+                        state.branch = 1;
+                        if(canChangeBarData) time = state.time;
+                        if(canChangeBarData) branch = state.branch;
+                        break;
+                    }
+                    case "E":{
+                        state.time = state.branchTime;
+                        state.branch = 2;
+                        if(canChangeBarData) time = state.time;
+                        if(canChangeBarData) branch = state.branch;
+                        break;
+                    }
+                    case "M":{
+                        state.time = state.branchTime;
+                        state.branch = 3;
+                        if(canChangeBarData) time = state.time;
+                        if(canChangeBarData) branch = state.branch;
+                        break;
+                    }
+                    case "BRANCHEND":{
+                        state.branch = 0;
+                        state.branchTime = null;
+                        if(canChangeBarData) branch = state.branch;
+                        break;
+                    }
                 }
             }
             else {
@@ -81,7 +116,7 @@ export class Bar {
 
                     const noteSpace = length === 0 ? math.fraction(0) : math.fraction(math.divide(math.multiply(240, state.measure.n / state.measure.d), math.multiply(state.bpm, length)) as math.Unit);
                     if (char !== "0") {
-                        const note = Note.parse(char, state.bpm, state.scroll, state.time);
+                        const note = Note.parse(char, state.bpm, state.scroll, state.time, state.branch);
                         notes.push(note);
                         entries.push(note);
                     }
@@ -98,7 +133,8 @@ export class Bar {
             course,
             bpm,
             scroll,
-            barline
+            barline,
+            branch
         })
     }
 
@@ -109,7 +145,8 @@ export class Bar {
     course: Course;
     bpm: math.Fraction;
     scroll: math.Fraction;
-    barline: boolean
+    barline: boolean;
+    branch: 0 | 1 | 2 | 3;
 
     private constructor(data: Bar.ConstructorData) {
         this.entries = data.entries;
@@ -120,6 +157,7 @@ export class Bar {
         this.bpm = data.bpm;
         this.scroll = data.scroll;
         this.barline = data.barline;
+        this.branch = data.branch;
     }
 
     toJSON() {
@@ -142,6 +180,7 @@ export namespace Bar {
         bpm: math.Fraction;
         scroll: math.Fraction;
         barline: boolean;
+        branch: 0 | 1 | 2 | 3;
     }
 
     export type TempBar = ({ type: 'notes' | 'command', value: string })[];
@@ -153,5 +192,6 @@ export namespace Bar {
         branch: 0 | 1 | 2 | 3; // null, n, e, m
         time: math.Fraction;
         measure: { n: number, d: number };
+        branchTime: math.Fraction | null;
     }
 }
