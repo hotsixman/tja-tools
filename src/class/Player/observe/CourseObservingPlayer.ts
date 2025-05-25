@@ -17,6 +17,8 @@ export class CourseObservingPlayer {
         speed: 1.1,
         noScroll: false
     }
+    onPlay: () => any | null = null;
+    onStop: () => any | null = null;
 
     constructor(course: Course, option?: CourseObservingPlayer.ConstructionOption) {
         this.course = course;
@@ -53,6 +55,12 @@ export class CourseObservingPlayer {
     }
     set speed(speed: number){
         this.playingOption.speed = speed;
+    }
+    get noScroll(){
+        return this.playingOption.noScroll
+    }
+    set noScroll(noScroll: boolean){
+        this.playingOption.noScroll = noScroll;
     }
     setBranch(branch: 0 | 1 | 2 | 3) {
         this.branch = branch;
@@ -117,9 +125,17 @@ export class CourseObservingPlayer {
             })
         })
 
+        this.animationId = requestAnimationFrame(frameRender);
+        this.audioPlayer.play();
+        this.isPlaying = true;
+        this.onPlay?.();
+
         function frameRender(timeStamp: DOMHighResTimeStamp) {
             if (!start) start = timeStamp - thisObject.course.song.getOffset() * 1000 + 1000;
-            thisObject.ctx.reset();
+            const {ctx} = thisObject;
+            ctx.reset();
+            ctx.fillStyle = "#282828";
+            ctx.fillRect(0, 0, thisObject.width, thisObject.height);
             drawHit();
 
             const elapsed = timeStamp - start;
@@ -174,9 +190,6 @@ export class CourseObservingPlayer {
                 thisObject.stop();
             }
         }
-        this.animationId = requestAnimationFrame(frameRender);
-        this.audioPlayer.play();
-        this.isPlaying = true;
 
         function drawHit() {
             const { ctx } = thisObject;
@@ -197,6 +210,7 @@ export class CourseObservingPlayer {
         }
         this.audioPlayer.stop();
         this.isPlaying = false;
+        this.onStop?.();
     }
 }
 
