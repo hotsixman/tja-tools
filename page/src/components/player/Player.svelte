@@ -8,7 +8,7 @@
     let song = $state<Song | null>(null);
     let difficulty = $state<string | null>(null);
     let coursePlayer = $state<CourseObservingPlayer | null>(null);
-    let speed = $state<number>(1.1);
+    let speed = $state<number>(1);
     
     $effect(() => {
         if(coursePlayer){
@@ -21,6 +21,7 @@
         if (!file || !tjaInput) return;
 
         stop();
+        playerContainer?.replaceChildren();
         difficulty = null;
         coursePlayer = null;
 
@@ -62,6 +63,10 @@
         coursePlayer?.stop();
     }
 </script>
+
+<main>
+
+</main>
 
 <div class="player-container" bind:this={playerContainer}></div>
 
