@@ -1,13 +1,13 @@
 <script lang="ts">
     import { Song } from "../../../../src/class/TJA/Song";
-    import { CoursePlayer } from "../../../../src/class/Player/play/CoursePlayer";
+    import { CourseAutoPlayer } from '../../../../src/class/Player/auto/CourseAutoPlayer';
 
     let playerContainer = $state<HTMLDivElement>();
     let tjaInput = $state<HTMLInputElement>();
     let audioInput = $state<HTMLInputElement>();
     let song = $state<Song | null>(null);
     let difficulty = $state<string | null>(null);
-    let coursePlayer = $state<CoursePlayer | null>(null);
+    let coursePlayer = $state<CourseAutoPlayer | null>(null);
     let speed = $state<number>(1);
     let noScroll = $state<boolean>(false);
     let recorder: MediaRecorder | null = null;
@@ -18,10 +18,10 @@
 
     $effect(() => {
         if (coursePlayer) {
-            coursePlayer.speed = speed;
+            coursePlayer.playOption.speed = speed;
         }
         if (coursePlayer) {
-            coursePlayer.noScroll = noScroll;
+            coursePlayer.playOption.noScroll = noScroll;
         }
     });
 
@@ -59,7 +59,7 @@
 
         stop();
 
-        coursePlayer = new CoursePlayer(course, {
+        coursePlayer = new CourseAutoPlayer(course, {
             width: canvasWidth,
         });
         playerContainer?.append(coursePlayer.canvas);
@@ -67,7 +67,7 @@
 
         const audioBlob = audioInput?.files?.[0];
         if (audioBlob) {
-            await coursePlayer.audioPlayer.setAudio(audioBlob);
+           await coursePlayer.audioPlayer.setMusic(audioBlob);
         }
 
         if (download) {
