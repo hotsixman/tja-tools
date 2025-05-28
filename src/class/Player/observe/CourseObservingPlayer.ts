@@ -69,7 +69,10 @@ export class CourseObservingPlayer {
     play() {
         if(this.isPlaying) return;
         this.ctx.reset();
+
         let start: number;
+        const end = (this.course.bars.at(-1).entries?.at(-1)?.time ?? this.course.bars.at(-1).time).valueOf() * 1000 + 1000;
+
         const noteRenderingDatas: CourseRenderer.RenderingData[] = [];
         const barRenderingData: CourseRenderer.BarRenderingData[] = [];
         const thisObject = this;
@@ -139,7 +142,9 @@ export class CourseObservingPlayer {
             drawHit();
 
             const elapsed = timeStamp - start;
-            let canRenderNextFrame = false;
+            if(elapsed > end){
+                return thisObject.stop();
+            }
 
             barRenderingData.toReversed().forEach((renderingData) => {
                 let bar = renderingData.bar
@@ -149,7 +154,7 @@ export class CourseObservingPlayer {
                     scroll: thisObject.playingOption.noScroll ? math.fraction(1) : bar.scroll.valueOf() * thisObject.playingOption.speed,
                     time: bar.time
                 });
-                canRenderNextFrame = thisObject.courseRenderer.render(renderingData, thisObject.branch) || canRenderNextFrame;
+                thisObject.courseRenderer.render(renderingData, thisObject.branch);
             })
             noteRenderingDatas.toReversed().forEach((renderingData) => {
                 switch (renderingData.type) {
@@ -181,14 +186,9 @@ export class CourseObservingPlayer {
                         break;
                     }
                 }
-                canRenderNextFrame = thisObject.courseRenderer.render(renderingData, thisObject.branch) || canRenderNextFrame;
+                thisObject.courseRenderer.render(renderingData, thisObject.branch)
             });
-            if (canRenderNextFrame) {
-                thisObject.animationId = requestAnimationFrame(frameRender);
-            }
-            else{
-                thisObject.stop();
-            }
+            thisObject.animationId = requestAnimationFrame(frameRender);
         }
 
         function drawHit() {
