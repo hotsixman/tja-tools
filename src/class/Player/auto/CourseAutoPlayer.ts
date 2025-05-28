@@ -7,6 +7,7 @@ export class CourseAutoPlayer {
     canvas: HTMLCanvasElement;
     isPlaying: boolean = false;
     ctx: CanvasRenderingContext2D;
+    animationId?: number;
     renderer: CourseAutoPlayer.Renderer;
     audioPlayer: CourseAutoPlayer.AudioPlayer;
     branch: 1 | 2 | 3 = 1;
@@ -51,7 +52,7 @@ export class CourseAutoPlayer {
         THIS.ctx.reset();
 
         let start: number;
-        const end = (THIS.course.bars.at(-1).entries?.at(-1)?.time ?? THIS.course.bars.at(-1).time).valueOf() * 1000 + 1000;
+        const end = (THIS.course.bars.at(-1)?.entries?.at(-1)?.time ?? THIS.course.bars.at(-1).time).valueOf() * 1000 + 1000;
 
         const barRenderingDatas: CourseAutoPlayer.Renderer.BarRenderingData[] = [];
         const noteRenderingDatas: CourseAutoPlayer.Renderer.NoteRenderingData[] = [];
@@ -61,7 +62,10 @@ export class CourseAutoPlayer {
         barRenderingDatas.reverse();
         noteRenderingDatas.reverse();
 
-        requestAnimationFrame(renderFrame);
+        const hitableNotes = THIS.course.notes.filter((note) => note.type === 1 || note.type === 2 || note.type === 3 || note.type === 4);
+        let lastHitNoteIndex = -1;
+
+        THIS.animationId = requestAnimationFrame(renderFrame);
         this.audioPlayer.play();
         THIS.isPlaying = true;
         this.onPlay?.();
@@ -83,8 +87,24 @@ export class CourseAutoPlayer {
             noteRenderingDatas.forEach((data) => THIS.renderer.renderNote(data, THIS.branch));
 
             THIS.renderer.drawDrum();
+            if(hitableNotes[lastHitNoteIndex + 1]){
+                while(hitableNotes[lastHitNoteIndex + 1].time.valueOf() * 1000 < elapsed){
+                    lastHitNoteIndex++;
+                }
+                const note = hitableNotes[lastHitNoteIndex + 1];
+                const noteTime = hitableNotes[lastHitNoteIndex + 1].time.valueOf();
+                if(elapsed <= noteTime * 1000 && noteTime * 1000 <= elapsed + 25){
+                    if(note.type === 1 || note.type === 3){
+                        THIS.audioPlayer.playHit('don');
+                    }
+                    else{
+                        THIS.audioPlayer.playHit('ka');
+                    }
+                    lastHitNoteIndex++;
+                }
+            }
 
-            requestAnimationFrame(renderFrame);
+            THIS.animationId = requestAnimationFrame(renderFrame);
         }
 
         function initRenderingData(bar: Bar) {
@@ -179,6 +199,7 @@ export class CourseAutoPlayer {
     stop() { 
         if(!this.isPlaying) return;
         this.audioPlayer.stop();
+        if(this.animationId) cancelAnimationFrame(this.animationId);
         this.isPlaying = false;
         this.onStop?.();
     }
@@ -236,7 +257,7 @@ export namespace CourseAutoPlayer {
                     y: this.player.height / 2
                 }
             }
-            else if (time.valueOf() * 1000 + 520 > elapsed) {
+            else if (time.valueOf() * 1000 + 300 > elapsed) {
                 const startX = this.hitXCoor;
                 const endX = this.player.width;
                 const radius = (endX - startX) / 2;
@@ -454,9 +475,13 @@ export namespace CourseAutoPlayer {
 
     export class AudioPlayer {
         player: CourseAutoPlayer;
-        audioBuffer: AudioBuffer | null;
+        musicBuffer: AudioBuffer | null;
+        hitBuffer: {
+            don?: AudioBuffer,
+            ka?: AudioBuffer
+        } = {};
         isPlaying: boolean = false;
-        sourceNode: AudioBufferSourceNode | null = null;
+        musicSourceNode: AudioBufferSourceNode | null = null;
         audioContext: AudioContext | null = null;
         onPlay: () => any | null = null;
         onStop: () => any | null = null;
@@ -466,27 +491,44 @@ export namespace CourseAutoPlayer {
         }
 
         async setMusic(audioBlob: Blob) {
-            this.audioContext = new AudioContext();
-            this.audioBuffer = await this.audioContext.decodeAudioData(
+            if(!this.audioContext) this.audioContext = new AudioContext();
+            this.musicBuffer = await this.audioContext.decodeAudioData(
                 await audioBlob.arrayBuffer(),
             );
         }
 
+        async setHitSound(audioBlob: Blob, hit: 'don' | 'ka'){
+            if(!this.audioContext) this.audioContext = new AudioContext();
+            this.hitBuffer[hit] = await this.audioContext.decodeAudioData(await audioBlob.arrayBuffer());
+        }
+
         play() {
             if (this.isPlaying) false;
-            if (this.audioContext && this.audioBuffer) {
-                this.sourceNode = this.audioContext.createBufferSource();
-                this.sourceNode.buffer = this.audioBuffer;
-                this.sourceNode.connect(this.audioContext.destination);
-                this.sourceNode.start(this.audioContext.currentTime + 1);
+            if (this.audioContext && this.musicBuffer) {
+                this.musicSourceNode = this.audioContext.createBufferSource();
+                this.musicSourceNode.buffer = this.musicBuffer;
+                const gainNode = this.audioContext.createGain();
+                gainNode.connect(this.audioContext.destination);
+                gainNode.gain.value = 1;
+                this.musicSourceNode.connect(gainNode);
+                this.musicSourceNode.start(this.audioContext.currentTime + 1);
             }
             this.isPlaying = true;
             this.onPlay?.();
         }
 
+        playHit(hit: 'don' | 'ka'){
+            if (this.audioContext && this.hitBuffer?.[hit]) {
+                const sourceNode = this.audioContext.createBufferSource();
+                sourceNode.buffer = this.hitBuffer[hit];
+                sourceNode.connect(this.audioContext.destination);
+                sourceNode.start();
+            }
+        }
+
         stop() {
             if (!this.isPlaying) return;
-            this.sourceNode?.stop();
+            this.musicSourceNode?.stop();
             this.isPlaying = true;
             this.onStop?.();
         }

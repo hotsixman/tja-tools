@@ -2,6 +2,8 @@
     import { Song } from "../../../../src/class/TJA/Song";
     import { CourseObservingPlayer } from "../../../../src/class/Player/observe/CourseObservingPlayer";
 
+    let {setCoursePlayer}: {setCoursePlayer: (player: CourseObservingPlayer) => void} = $props();
+
     let playerContainer = $state<HTMLDivElement>();
     let tjaInput = $state<HTMLInputElement>();
     let audioInput = $state<HTMLInputElement>();
@@ -62,6 +64,7 @@
         coursePlayer = new CourseObservingPlayer(course, {
             width: canvasWidth,
         });
+        setCoursePlayer(coursePlayer);
         playerContainer?.append(coursePlayer.canvas);
         coursePlayer.canvas.style.width = "100%";
 

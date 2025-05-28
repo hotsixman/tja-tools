@@ -2,6 +2,8 @@
     import { Song } from "../../../../src/class/TJA/Song";
     import { CourseAutoPlayer } from '../../../../src/class/Player/auto/CourseAutoPlayer';
 
+    let {setCoursePlayer}: {setCoursePlayer: (player: CourseAutoPlayer) => void} = $props();
+
     let playerContainer = $state<HTMLDivElement>();
     let tjaInput = $state<HTMLInputElement>();
     let audioInput = $state<HTMLInputElement>();
@@ -62,6 +64,7 @@
         coursePlayer = new CourseAutoPlayer(course, {
             width: canvasWidth,
         });
+        setCoursePlayer(coursePlayer);
         playerContainer?.append(coursePlayer.canvas);
         coursePlayer.canvas.style.width = "100%";
 
@@ -69,6 +72,12 @@
         if (audioBlob) {
            await coursePlayer.audioPlayer.setMusic(audioBlob);
         }
+        
+        const donBlob = await fetch('/don.ogg').then(async (response) => await response.blob()).catch(() => null);
+        const kaBlob = await fetch('/ka.ogg').then(async (response) => await response.blob()).catch(() => null);
+
+        if(donBlob) await coursePlayer.audioPlayer.setHitSound(donBlob, 'don');
+        if(kaBlob) await coursePlayer.audioPlayer.setHitSound(kaBlob, 'ka');
 
         if (download) {
             coursePlayer.onPlay = () => {
@@ -80,7 +89,7 @@
                     coursePlayer.audioPlayer.audioContext?.createMediaStreamDestination?.() ??
                     null;
                 if (audioStream) {
-                    coursePlayer.audioPlayer?.sourceNode?.connect(audioStream);
+                    coursePlayer.audioPlayer?.musicSourceNode?.connect(audioStream);
                 }
 
                 const mediaStreamParam = [...canvasStream.getVideoTracks()];
