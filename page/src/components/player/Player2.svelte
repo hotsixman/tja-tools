@@ -73,8 +73,8 @@
            await coursePlayer.audioPlayer.setMusic(audioBlob);
         }
         
-        const donBlob = await fetch('/don.ogg').then(async (response) => await response.blob()).catch(() => null);
-        const kaBlob = await fetch('/ka.ogg').then(async (response) => await response.blob()).catch(() => null);
+        const donBlob = await fetch('don.ogg').then(async (response) => await response.blob()).catch(() => null);
+        const kaBlob = await fetch('ka.ogg').then(async (response) => await response.blob()).catch(() => null);
 
         if(donBlob) await coursePlayer.audioPlayer.setHitSound(donBlob, 'don');
         if(kaBlob) await coursePlayer.audioPlayer.setHitSound(kaBlob, 'ka');
