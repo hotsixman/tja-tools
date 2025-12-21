@@ -1,17 +1,23 @@
 {
+    "include": [
+        "./src/**/*.ts"
+    ],
     "compilerOptions": {
-        "module": "ESNext",
-        "moduleResolution": "bundler",
         "target": "ESNext",
-        "strictNullChecks": true,
-        "strictFunctionTypes": true,
-        "strict": true,
+        "declaration": true,
+        "declarationMap": true,
         "sourceMap": true,
-        "allowImportingTsExtensions": false,
-        "verbatimModuleSyntax": true
+        "removeComments": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "outDir": "./dist"
     },
     "exclude": [
-        "node_modules",
+        "./node_modules",
         "**/node_modules/*"
     ]
 }

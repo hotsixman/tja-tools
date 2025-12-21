@@ -1,4 +1,9 @@
 {
+  "name": "tja-parser",
+  "author": {
+    "name": "hotsixman"
+  },
+  "version": "0.1.0",
   "dependencies": {
     "mathjs": "^15.1.0"
   },
