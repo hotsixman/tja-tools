@@ -10,6 +10,7 @@ export class Bar {
     private start: math.Fraction;
     private end: math.Fraction;
     private barLength = 0;
+    private barlineHidden = false;
     constructor(start: math.Fraction, end: math.Fraction) {
         this.start = start;
         this.end = end;
@@ -42,11 +43,18 @@ export class Bar {
     setEnd(end: math.Fraction) {
         this.end = math.fraction(end);
     }
-    getBarLength(){
+    getBarLength() {
         return this.barLength;
     }
-    setBarLength(barLength: number){
+    setBarLength(barLength: number) {
         this.barLength = barLength;
+    }
+
+    getBarlineHidden() {
+        return this.barlineHidden;
+    }
+    setBarlineHidden(barlineHidden: boolean) {
+        this.barlineHidden = barlineHidden;
     }
 
     toJSON(): any {

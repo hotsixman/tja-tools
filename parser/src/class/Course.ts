@@ -1,7 +1,6 @@
 import { UnknownCourseDifficultyException, MetadataParseException } from "../exception/ParseException.js";
 import type { Difficulty } from "../types.js";
 import { Bar } from "./Bar.js";
-import { BarLine } from "./BarLine.js";
 import { Branch } from "./Branch.js";
 import { BarlineCommand, BPMChangeCommand, Command, MeasureCommand, ScrollCommand } from "./Command.js";
 import type { Item } from "./Item.js";
@@ -30,19 +29,19 @@ export class Course {
             }
             const parsedMetadata = Song.parseMetadata(courseTja[i]);
             if (parsedMetadata.key === "course") {
-                if(parsedMetadata.value === "0" || parsedMetadata.value === "Easy"){
+                if (parsedMetadata.value === "0" || parsedMetadata.value === "Easy") {
                     difficulty = 'easy';
                 }
-                else if(parsedMetadata.value === "1" || parsedMetadata.value === "Normal"){
+                else if (parsedMetadata.value === "1" || parsedMetadata.value === "Normal") {
                     difficulty = 'normal';
                 }
-                else if(parsedMetadata.value === "2" || parsedMetadata.value === "Hard"){
+                else if (parsedMetadata.value === "2" || parsedMetadata.value === "Hard") {
                     difficulty = 'hard';
                 }
-                else if(parsedMetadata.value === "3" || parsedMetadata.value === "Oni"){
+                else if (parsedMetadata.value === "3" || parsedMetadata.value === "Oni") {
                     difficulty = 'oni';
                 }
-                else if(parsedMetadata.value === "4" || parsedMetadata.value === "Edit"){
+                else if (parsedMetadata.value === "4" || parsedMetadata.value === "Edit") {
                     difficulty = 'edit';
                 }
             }
@@ -176,18 +175,20 @@ export class Course {
             if (lineGroup instanceof Course.LineGroup) {
                 if (lineGroup.lines.length === 0) continue;
 
-                let barlinePushed = false;
+                const bar = new Bar(math.fraction(currentTiming), math.fraction(currentTiming));
+                let barlineChecked = false;
                 let barLength = 0;
                 let items: Item[] = [];
                 for (const line of lineGroup.lines) {
                     if (line.startsWith('#')) {
                         const command = Command.parse(line);
                         if (command) items.push(command);
+                        if (command instanceof BarlineCommand) barlineHidden = command.getHide();
                     }
                     else {
-                        if (!barlinePushed) {
-                            items.push(new BarLine(math.fraction(0)));
-                            barlinePushed = true;
+                        if (!barlineChecked) {
+                            bar.setBarlineHidden(barlineHidden);
+                            barlineChecked = true;
                         }
                         for (const char of line) {
                             if (char === ',') break;
@@ -196,14 +197,13 @@ export class Course {
                                 items.push(note);
                                 barLength++;
                             };
-                            if(note instanceof BalloonNote){
+                            if (note instanceof BalloonNote) {
                                 note.setCount(getNextBalloon());
                             }
                         }
                     }
                 }
 
-                const bar = new Bar(math.fraction(currentTiming), math.fraction(currentTiming));
                 bar.setBarLength(barLength);
                 if (barLength === 0) {
                     items.forEach((item) => {
@@ -234,17 +234,6 @@ export class Course {
                             }
                             else if (item instanceof ScrollCommand) {
                                 currentScroll = item.value;
-                            }
-                            else if (item instanceof BarlineCommand) {
-                                barlineHidden = item.getHide();
-                            }
-                        }
-                        else if (item instanceof BarLine) {
-                            if (barlineHidden) {
-                                item.hide();
-                            }
-                            else {
-                                item.show();
                             }
                         }
                     });
@@ -361,14 +350,14 @@ export class Course {
         this.bars.push(...bars);
     }
 
-    getBalloon(){
+    getBalloon() {
         return (this.metadata.balloon as string ?? '').split(',').map((e) => Number(e));
     }
 
-    getBalloonIterator(){
+    getBalloonIterator() {
         let index = 0;
         const balloons = this.getBalloon();
-        function getNext(){
+        function getNext() {
             const balloon = balloons[index];
             index++;
             return balloon;
@@ -376,7 +365,7 @@ export class Course {
         return getNext;
     }
 
-    toJSON(){
+    toJSON() {
         return {
             metadata: this.metadata,
             difficulty: this.difficulty,
