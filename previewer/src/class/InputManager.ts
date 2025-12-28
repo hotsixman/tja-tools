@@ -11,13 +11,11 @@ export class InputManager {
     private pressedKeySet = new Set<string>();
 
     private constructor() {
-        document.addEventListener('keydown', (event) => {
-            if (!this.active) return;
+        window.addEventListener('keydown', (event) => {
             event.preventDefault();
             this.pressedKeySet.add(event.key);
         });
-        document.addEventListener('keyup', (event) => {
-            if (!this.active) return;
+        window.addEventListener('keyup', (event) => {
             event.preventDefault();
             this.pressedKeySet.delete(event.key);
         })

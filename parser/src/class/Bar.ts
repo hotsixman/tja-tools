@@ -11,6 +11,8 @@ export class Bar {
     private end: math.Fraction;
     private barLength = 0;
     private barlineHidden = false;
+    private bpm: number = 160;
+    private scroll: number = 1;
     constructor(start: math.Fraction, end: math.Fraction) {
         this.start = start;
         this.end = end;
@@ -55,6 +57,19 @@ export class Bar {
     }
     setBarlineHidden(barlineHidden: boolean) {
         this.barlineHidden = barlineHidden;
+    }
+
+    setBpm(bpm: number) {
+        this.bpm = bpm;
+    }
+    getBpm() {
+        return this.bpm;
+    }
+    setScroll(scroll: number) {
+        this.scroll = scroll;
+    }
+    getScroll() {
+        return this.scroll;
     }
 
     toJSON(): any {

@@ -1,6 +1,7 @@
 import { Difficulty, Song } from "tja-parser";
 import { Renderer } from "./Renderer";
-import { State } from "./State";
+import { State } from "./state/State";
+import { InputManager } from "./InputManager";
 
 export class Previewer {
     state: State;
@@ -15,6 +16,7 @@ export class Previewer {
 
     start() {
         this.active = true;
+        InputManager.getInstance().enable();
         const state = this.state;
         const renderer = this.renderer;
         const THIS = this;

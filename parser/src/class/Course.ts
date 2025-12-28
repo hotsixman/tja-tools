@@ -176,6 +176,8 @@ export class Course {
                 if (lineGroup.lines.length === 0) continue;
 
                 const bar = new Bar(math.fraction(currentTiming), math.fraction(currentTiming));
+                bar.setBpm(currentBPM);
+                bar.setScroll(currentScroll);
                 let barlineChecked = false;
                 let barLength = 0;
                 let items: Item[] = [];
@@ -188,6 +190,8 @@ export class Course {
                     else {
                         if (!barlineChecked) {
                             bar.setBarlineHidden(barlineHidden);
+                            bar.setBpm(currentBPM);
+                            bar.setScroll(currentScroll);
                             barlineChecked = true;
                         }
                         for (const char of line) {
