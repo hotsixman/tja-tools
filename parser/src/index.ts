@@ -1,9 +1,9 @@
 export * from './class/Bar.js';
-export * from './class/BarLine.js';
 export * from './class/Branch.js';
 export * from './class/Command.js';
 export * from './class/Course.js';
 export * from './class/Item.js';
+export * from './class/Note.js';
 export * from './class/Song.js';
 
 export * from './exception/ParseException.js';
