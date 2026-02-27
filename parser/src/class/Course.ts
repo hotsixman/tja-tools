@@ -1,10 +1,11 @@
-import { UnknownCourseDifficultyException, MetadataParseException } from "../exception/ParseException.js";
+import { UnknownCourseDifficultyException } from "../exception/ParseException.js";
 import type { Difficulty } from "../types.js";
 import { Bar } from "./Bar.js";
 import { Branch } from "./Branch.js";
 import { BarlineCommand, BPMChangeCommand, Command, MeasureCommand, ScrollCommand } from "./Command.js";
 import type { Item } from "./Item.js";
 import { BalloonNote, EmptyNote, HitNote, Note, RollEndNote, RollNote } from "./Note.js";
+import { NoteGroup } from "./NoteGroup.js";
 import { Song } from "./Song.js";
 import * as math from 'mathjs';
 
@@ -55,15 +56,15 @@ export class Course {
         }
 
         const course = new Course(difficulty, metadata, song);
-        course.pushBar(...this.parseBar(courseTja.slice(i), course.getBalloonIterator(), course.getBPM()));
+        course.pushNoteGroups(...this.parseBar(courseTja.slice(i), course.getBalloonIterator(), course.getBPM()));
 
         return course;
     }
 
-    private static parseBar(lines: string[], getNextBalloon: () => number, bpmInit: number): Bar[] {
+    private static parseBar(lines: string[], getNextBalloon: () => number, bpmInit: number): NoteGroup[] {
         const lineGroups = this.groupLines(lines);
 
-        return this.convertLineGroupToBar(lineGroups, getNextBalloon, bpmInit).bars;
+        return this.convertLineGroupToNoteGroup(lineGroups, getNextBalloon, bpmInit).noteGroups;
     }
 
     /**
@@ -144,9 +145,9 @@ export class Course {
     }
 
     /**
-     * `LineGroup`을 `Bar`로 변환
+     * `LineGroup`을 `NoteGroup`으로 변환
      */
-    private static convertLineGroupToBar(
+    private static convertLineGroupToNoteGroup(
         lineGroups: (Course.LineGroup | Course.BranchedLineGroup)[],
         getNextBalloon: () => number,
         currentBPM: number,
@@ -155,7 +156,7 @@ export class Course {
         currentScroll: number = 1,
         barlineHidden: boolean = false,
     ): {
-        bars: Bar[],
+        noteGroups: NoteGroup[],
         getNextBalloon: () => number,
         currentBPM: number,
         currentTiming: math.Fraction,
@@ -170,7 +171,7 @@ export class Course {
             return math.fraction(math.divide(math.multiply(1000, 240, currentMeasure), math.fraction(currentBPM)) as math.Fraction);
         }
 
-        const bars: Bar[] = [];
+        const noteGroups: (Bar | Branch)[] = [];
         for (const lineGroup of lineGroups) {
             if (lineGroup instanceof Course.LineGroup) {
                 if (lineGroup.lines.length === 0) continue;
@@ -283,22 +284,22 @@ export class Course {
 
                     bar.pushItem(...items);
                 }
-                bars.push(bar);
+                noteGroups.push(bar);
             }
             else {
                 const branch = new Branch(lineGroup.type, lineGroup.criteria, math.fraction(currentTiming), math.fraction(currentTiming));
                 let result;
                 if (lineGroup.normal) {
-                    result = this.convertLineGroupToBar(lineGroup.normal, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
-                    branch.normal = result.bars;
+                    result = this.convertLineGroupToNoteGroup(lineGroup.normal, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
+                    branch.normal = result.noteGroups as Bar[];
                 }
                 if (lineGroup.advanced) {
-                    result = this.convertLineGroupToBar(lineGroup.advanced, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
-                    branch.advanced = result.bars;
+                    result = this.convertLineGroupToNoteGroup(lineGroup.advanced, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
+                    branch.advanced = result.noteGroups as Bar[];
                 }
                 if (lineGroup.master) {
-                    result = this.convertLineGroupToBar(lineGroup.master, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
-                    branch.master = result.bars;
+                    result = this.convertLineGroupToNoteGroup(lineGroup.master, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
+                    branch.master = result.noteGroups as Bar[];
                 }
 
                 if (result) {
@@ -308,12 +309,12 @@ export class Course {
                     barlineHidden = result.barlineHidden;
                     branch.setEnd(result.currentTiming);
                 }
-                bars.push(branch);
+                noteGroups.push(branch);
             }
         }
 
         return {
-            bars,
+            noteGroups,
             getNextBalloon,
             currentBPM,
             currentTiming,
@@ -325,7 +326,7 @@ export class Course {
 
     difficulty: Difficulty;
     metadata: Course.Metadata;
-    bars: Bar[] = [];
+    noteGroups: NoteGroup[] = [];
     song?: Song;
 
     constructor(difficulty: Difficulty, metadata: Course.Metadata, song?: Song) {
@@ -350,8 +351,8 @@ export class Course {
         return Number(this.metadata.level) || 1;
     }
 
-    pushBar(...bars: Bar[]) {
-        this.bars.push(...bars);
+    pushNoteGroups(...noteGroups: NoteGroup[]) {
+        this.noteGroups.push(...noteGroups);
     }
 
     getBalloon() {
@@ -373,7 +374,7 @@ export class Course {
         return {
             metadata: this.metadata,
             difficulty: this.difficulty,
-            bars: this.bars
+            noteGroups: this.noteGroups
         }
     }
 }

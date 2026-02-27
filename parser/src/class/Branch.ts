@@ -1,7 +1,8 @@
 import * as math from 'mathjs';
 import { Bar } from './Bar.js';
+import { NoteGroup } from './NoteGroup.js';
 
-export class Branch extends Bar {
+export class Branch extends NoteGroup {
     type: Branch.Type;
     criteria: [number, number];
     normal?: Bar[];
@@ -14,11 +15,10 @@ export class Branch extends Bar {
         this.criteria = criteria1;
     }
 
-    toJSON(){
-        const superJSON = super.toJSON();
+    toJSON() {
         return {
-            start: superJSON.start,
-            end: superJSON.end,
+            start: this.getStart().valueOf(),
+            end: this.getEnd().valueOf(),
             normal: this.normal,
             advanced: this.advanced,
             master: this.master,

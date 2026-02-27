@@ -1,22 +1,16 @@
 import { Command } from "./Command.js";
 import { Item } from "./Item.js";
-import * as math from 'mathjs';
 import { Note } from "./Note.js";
+import { NoteGroup } from "./NoteGroup.js";
 
-export class Bar {
+export class Bar extends NoteGroup {
     private items: Item[] = [];
     private notes: Note[] = [];
     private commands: Command[] = [];
-    private start: math.Fraction;
-    private end: math.Fraction;
-    private barLength = 0;
+    /** Count of notes */ private barLength = 0;
     private barlineHidden = false;
     private bpm: number = 160;
     private scroll: number = 1;
-    constructor(start: math.Fraction, end: math.Fraction) {
-        this.start = start;
-        this.end = end;
-    }
 
     pushItem(...items: Item[]) {
         this.items.push(...items);
@@ -33,18 +27,6 @@ export class Bar {
         return Array.from(this.commands);
     }
 
-    getStart() {
-        return math.fraction(this.start);
-    }
-    setStart(start: math.Fraction) {
-        this.start = math.fraction(start);
-    }
-    getEnd() {
-        return math.fraction(this.end);
-    }
-    setEnd(end: math.Fraction) {
-        this.end = math.fraction(end);
-    }
     getBarLength() {
         return this.barLength;
     }
@@ -74,8 +56,8 @@ export class Bar {
 
     toJSON(): any {
         return {
-            start: this.start.valueOf(),
-            end: this.end.valueOf(),
+            start: this.getStart().valueOf(),
+            end: this.getEnd().valueOf(),
             items: this.items,
             notes: this.notes,
             commands: this.commands,
