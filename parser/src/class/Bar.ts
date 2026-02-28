@@ -9,7 +9,7 @@ export class Bar {
     private commands: Command[] = [];
     private start: math.Fraction;
     private end: math.Fraction;
-    private barLength = 0;
+    private measure = math.fraction(1);
     private barlineHidden = false;
     private bpm: number = 160;
     private scroll: number = 1;
@@ -33,6 +33,13 @@ export class Bar {
         return Array.from(this.commands);
     }
 
+    setMeasure(measure: math.Fraction) {
+        this.measure = measure;
+    }
+    getMeasure() {
+        return this.measure;
+    }
+
     getStart() {
         return math.fraction(this.start);
     }
@@ -44,12 +51,6 @@ export class Bar {
     }
     setEnd(end: math.Fraction) {
         this.end = math.fraction(end);
-    }
-    getBarLength() {
-        return this.barLength;
-    }
-    setBarLength(barLength: number) {
-        this.barLength = barLength;
     }
 
     getBarlineHidden() {
@@ -79,7 +80,6 @@ export class Bar {
             items: this.items,
             notes: this.notes,
             commands: this.commands,
-            barLength: this.barLength,
             type: 'bar'
         }
     }

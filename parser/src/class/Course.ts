@@ -176,10 +176,7 @@ export class Course {
                 if (lineGroup.lines.length === 0) continue;
 
                 const bar = new Bar(math.fraction(currentTiming), math.fraction(currentTiming));
-                bar.setBpm(currentBPM);
-                bar.setScroll(currentScroll);
-                let barlineChecked = false;
-                let barLength = 0;
+                let noteCount = 0;
                 let items: Item[] = [];
                 for (const line of lineGroup.lines) {
                     if (line.startsWith('#')) {
@@ -188,18 +185,12 @@ export class Course {
                         if (command instanceof BarlineCommand) barlineHidden = command.getHide();
                     }
                     else {
-                        if (!barlineChecked) {
-                            bar.setBarlineHidden(barlineHidden);
-                            bar.setBpm(currentBPM);
-                            bar.setScroll(currentScroll);
-                            barlineChecked = true;
-                        }
                         for (const char of line) {
                             if (char === ',') break;
                             const note = Note.parse(char);
                             if (note) {
                                 items.push(note);
-                                barLength++;
+                                noteCount++;
                             };
                             if (note instanceof BalloonNote) {
                                 note.setCount(getNextBalloon());
@@ -208,21 +199,46 @@ export class Course {
                     }
                 }
 
-                bar.setBarLength(barLength);
-                if (barLength === 0) {
+                if (noteCount === 0) {
                     items.forEach((item) => {
                         item.setTiming(currentTiming);
+                        if (item instanceof Command) {
+                            if (item instanceof MeasureCommand) {
+                                currentMeasure = math.fraction(item.value);
+                            }
+                            else if (item instanceof BPMChangeCommand) {
+                                currentBPM = item.value;
+                            }
+                            else if (item instanceof ScrollCommand) {
+                                currentScroll = item.value;
+                            }
+                            else if (item instanceof MeasureCommand) {
+                                currentMeasure = item.value;
+                            }
+                        }
                     });
+                    bar.setBarlineHidden(barlineHidden);
+                    bar.setBpm(currentBPM);
+                    bar.setScroll(currentScroll);
+                    bar.setMeasure(currentMeasure);
                     currentTiming = math.add(currentTiming, getBarLength());
                     bar.setEnd(currentTiming);
                 }
                 else {
+                    let firstNoteChecked = false;
                     // 시작 타이밍 계산
                     const notes: Note[] = [];
                     items.forEach((item) => {
                         item.setTiming(currentTiming);
                         if (item instanceof Note) {
-                            const delay = math.fraction(math.divide(getBarLength(), barLength) as math.Fraction);
+                            if (!firstNoteChecked) {
+                                bar.setBarlineHidden(barlineHidden);
+                                bar.setBpm(currentBPM);
+                                bar.setScroll(currentScroll);
+                                bar.setMeasure(currentMeasure);
+                                firstNoteChecked = true;
+                            }
+                            const delay = math.fraction(math.divide(getBarLength(), noteCount) as math.Fraction);
                             item.setDelay(delay);
                             item.setBpm(currentBPM);
                             item.setScroll(currentScroll);
@@ -238,6 +254,9 @@ export class Course {
                             }
                             else if (item instanceof ScrollCommand) {
                                 currentScroll = item.value;
+                            }
+                            else if (item instanceof MeasureCommand) {
+                                currentMeasure = item.value;
                             }
                         }
                     });
