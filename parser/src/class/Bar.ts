@@ -2,13 +2,12 @@ import { Command } from "./Command.js";
 import { Item } from "./Item.js";
 import { Note } from "./Note.js";
 import { NoteGroup } from "./NoteGroup.js";
+import * as math from 'mathjs';
 
 export class Bar extends NoteGroup {
     private items: Item[] = [];
     private notes: Note[] = [];
     private commands: Command[] = [];
-    private start: math.Fraction;
-    private end: math.Fraction;
     private measure = math.fraction(1);
     private barlineHidden = false;
     private bpm: number = 160;
@@ -34,19 +33,6 @@ export class Bar extends NoteGroup {
     }
     getMeasure() {
         return this.measure;
-    }
-
-    getStart() {
-        return math.fraction(this.start);
-    }
-    setStart(start: math.Fraction) {
-        this.start = math.fraction(start);
-    }
-    getEnd() {
-        return math.fraction(this.end);
-    }
-    setEnd(end: math.Fraction) {
-        this.end = math.fraction(end);
     }
 
     getBarlineHidden() {

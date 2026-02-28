@@ -216,6 +216,9 @@ export class Course {
                             else if (item instanceof MeasureCommand) {
                                 currentMeasure = item.value;
                             }
+                            else if (item instanceof BarlineCommand) {
+                                barlineHidden = item.getHide();
+                            }
                         }
                     });
                     bar.setBarlineHidden(barlineHidden);
@@ -258,6 +261,9 @@ export class Course {
                             }
                             else if (item instanceof MeasureCommand) {
                                 currentMeasure = item.value;
+                            }
+                            else if (item instanceof BarlineCommand) {
+                                barlineHidden = item.getHide();
                             }
                         }
                     });
