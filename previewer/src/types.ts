@@ -1,0 +1,1 @@
+export type HitSoundData = { type: 'don' | 'ka', timing: number, vol?: number };
