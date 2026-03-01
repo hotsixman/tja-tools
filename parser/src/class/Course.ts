@@ -146,6 +146,7 @@ export class Course {
 
     /**
      * `LineGroup`을 `NoteGroup`으로 변환
+     * @todo 연타노트 종료 타이밍 계산을 분리
      */
     private static convertLineGroupToNoteGroup(
         lineGroups: (Course.LineGroup | Course.BranchedLineGroup)[],
