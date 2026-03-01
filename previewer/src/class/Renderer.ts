@@ -1,4 +1,4 @@
-import { Bar, Note } from "tja-parser";
+import { Bar, HitNote, Note } from "tja-parser";
 import type { Previewer } from "./Previewer";
 
 export class Renderer {
@@ -17,8 +17,12 @@ export class Renderer {
     }
 
     render(time: number) {
+        this.ctx.reset();
         this.drawBackground();
         this.drawHit();
+        if (!this.previewer.loaded) {
+            return;
+        }
         this.previewer.bars.toReversed().forEach((bar, i, a) => {
             const index = a.length - i;
             this.renderBar(bar, index, time);
@@ -26,9 +30,10 @@ export class Renderer {
     }
 
     drawBackground() {
-        this.ctx.reset();
-        this.ctx.fillStyle = "#282828";
+        this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = "#282828";
+        this.ctx.fillRect(0, (this.canvas.height - this.courseHeight) / 2, this.canvas.width, this.courseHeight);
     }
 
     drawHit() {
@@ -43,24 +48,70 @@ export class Renderer {
 
     renderBar(bar: Bar, index: number, time: number) {
         const xCoor = this.getXCoor(bar.getStart().valueOf() / 1000, time, bar.getBpm(), bar.getScroll());
-        if (!bar.getBarlineHidden()) {
-            this.renderBarLine(xCoor);
-        }
-        this.ctx.font = "60px"
-        this.ctx.fillText(index.toString(), xCoor, this.canvas.height - 10);
+        this.renderBarLine(xCoor, index, bar.getBarlineHidden());
+        bar.getNotes().toReversed().forEach((note) => {
+            this.renderNote(note, time);
+        })
     }
 
-    renderBarLine(xCoor: number) {
+    renderBarLine(xCoor: number, index: number, hidden: boolean) {
+        if (!hidden) {
+            this.ctx.fillStyle = "white";
+            this.ctx.fillRect(xCoor - 1, (this.canvas.height - this.courseHeight) / 2, 2, this.courseHeight);
+        }
         this.ctx.fillStyle = "white";
-        this.ctx.fillRect(xCoor - 1, 0, 2, this.height);
-        return true;
+        const fontSize = this.courseHeight / 15;
+        this.ctx.font = `${fontSize}px sans-serif`;
+        const textWidth = this.ctx.measureText(index.toString()).width;
+        this.ctx.fillText(index.toString(), xCoor - textWidth / 2, (this.canvas.height - this.courseHeight - fontSize) / 2);
+    }
+
+    renderNote(note: Note, time: number) {
+        const xCoor = this.getXCoor(note.getTimingMS() / 1000, time, note.getBPM(), note.getScroll());
+        if (time > note.getTimingMS() / 1000) {
+            return;
+        }
+        if (note instanceof HitNote) {
+            const ctx = this.ctx;
+            let isBig = note.type === Note.Type.DON_BIG || note.type === Note.Type.KA_BIG;
+            let radius = isBig ? this.noteRadius * 1.3 : this.noteRadius;
+
+            if (xCoor < 0 - radius * 2) return false;
+            if (xCoor > this.canvas.width + radius * 2) return true;
+
+            let color = (note.type === Note.Type.KA_SMALL || note.type === Note.Type.KA_BIG) ? '#42bfbd' : '#f84927';
+            // 검은색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(xCoor, this.canvas.height / 2, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            ctx.closePath();
+            // 회색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(xCoor, this.canvas.height / 2, isBig ? radius * (1 - 1 / (12 * 1.3)) : radius * (1 - 1 / 12), 0, 2 * Math.PI);
+            ctx.fillStyle = '#ece7d9';
+            ctx.fill();
+            ctx.closePath();
+            // 안에
+            ctx.beginPath();
+            ctx.lineWidth = 0; // isBig ? radius * (1 - 1 / (4 * 1.3)) : radius * (1 - 1 / 4)
+            ctx.arc(xCoor, this.canvas.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color ?? '';
+            ctx.fill();
+            ctx.closePath();
+        }
     }
 
     getXCoor(timing: number, time: number, bpm: number, scroll: number) {
         return this.hitXCoor + ((timing - time) * (this.canvas.width) * (scroll.valueOf() * bpm.valueOf() / 240));
     }
 
-    get height() {
+    get courseWidth() {
+        return this.canvas.width;
+    }
+    get courseHeight() {
         return this.canvas.width * 320 / 237 * 13 / 128;
     }
     get hitXCoor() {

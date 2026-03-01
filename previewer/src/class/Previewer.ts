@@ -1,20 +1,56 @@
-import { Bar, Branch, Course, HitNote, Note } from "tja-parser";
+import { Bar, Branch, Course, HitNote, Note, NoteGroup } from "tja-parser";
 import { Renderer } from "./Renderer";
 import { AudioPlayer } from "./AudioPlayer";
 import type { HitSoundData } from "../types";
 
 export class Previewer {
-    static async getInstance(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer, canvas: HTMLCanvasElement) {
+    renderer: Renderer;
+    audioPlayer: AudioPlayer | null = null;
+
+    course: Course | null = null;
+    branch: 'normal' | 'advanced' | 'master' | null = null;
+
+    bars: Bar[] | null = null;
+    comboTiming: number[] | null = null;
+
+    requestAnimationFrameId: number | null = null;
+
+    constructor(canvas: HTMLCanvasElement) {
+        this.renderer = new Renderer(this, canvas);
+
+        const step = () => {
+            const currentTime = this.audioPlayer?.getCurrentTime() ?? -100;
+            this.renderer.render(currentTime);
+            this.requestAnimationFrameId = requestAnimationFrame(step);
+        }
+        this.requestAnimationFrameId = requestAnimationFrame(step);
+    }
+
+    async load(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer) {
+        const { bars, comboTiming, hitSoundDatas } = this.getBars(course.noteGroups, branch);
+
+        const songOffset = Number(course.song?.metadata.offset || 0) || 0;
+        const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
+        const audioPlayer = await AudioPlayer.getInstance(audioFile, hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
+
+        this.audioPlayer = audioPlayer;
+        this.course = course;
+        this.branch = branch;
+        this.bars = bars;
+        this.comboTiming = comboTiming;
+    }
+
+    private getBars(noteGroups: NoteGroup[], branch: 'normal' | 'advanced' | 'master') {
+        this.audioPlayer?.destroy();
+        this.audioPlayer = null;
+
         const hitSoundDatas: HitSoundData[] = [];
         const comboTiming: number[] = [];
-
         const bars: Bar[] = [];
-        let barIndex = 0;
-        course.noteGroups.forEach((noteGroup) => {
+
+        noteGroups.forEach((noteGroup) => {
             if (noteGroup instanceof Bar) {
                 bars.push(noteGroup);
-                this.barProcess(noteGroup, hitSoundDatas, comboTiming);
-                barIndex++;
             }
             else if (noteGroup instanceof Branch) {
                 let barGroup: Bar[] | undefined;
@@ -31,72 +67,45 @@ export class Previewer {
                 if (barGroup) {
                     barGroup.forEach((bar) => {
                         bars.push(bar);
-                        this.barProcess(bar, hitSoundDatas, comboTiming);
-                        barIndex++;
                     })
                 }
             }
         });
 
-        const songOffset = Number(course.song?.metadata.offset || 0) || 0;
-        const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
-        const audioPlayer = await AudioPlayer.getInstance(audioFile, hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
+        bars.forEach((bar) => {
+            bar.getNotes().forEach((note) => {
+                if (note instanceof HitNote) {
+                    const timing = note.getTimingMS() / 1000;
 
-        return new Previewer(course, branch, bars, comboTiming, audioPlayer, canvas);
-    }
-
-    static barProcess(bar: Bar, hitSoundDatas: HitSoundData[], comboTiming: number[]) {
-        bar.getNotes().forEach((note) => {
-            if (note instanceof HitNote) {
-                const timing = note.getTimingMS() / 1000;
-
-                hitSoundDatas.push({
-                    timing,
-                    type: (note.type === Note.Type.DON_SMALL || note.type === Note.Type.DON_BIG) ? 'don' : 'ka'
-                });
-                comboTiming.push(timing);
-            }
+                    hitSoundDatas.push({
+                        timing,
+                        type: (note.type === Note.Type.DON_SMALL || note.type === Note.Type.DON_BIG) ? 'don' : 'ka'
+                    });
+                    comboTiming.push(timing);
+                }
+            });
         });
+
+        return { bars, comboTiming, hitSoundDatas }
     }
 
-    renderer: Renderer;
-    course: Course;
-    branch: 'normal' | 'advanced' | 'master';
-    audioPlayer: AudioPlayer;
-
-    bars: Bar[];
-    comboTiming: number[];
-
-    requestAnimationFrameId: number | null = null;
-
-    private constructor(
-        course: Course,
-        branch: 'normal' | 'advanced' | 'master',
-        bars: Bar[],
-        comboTiming: number[],
-        audioPlayer: AudioPlayer,
-        canvas: HTMLCanvasElement
-    ) {
-        this.renderer = new Renderer(this, canvas);
-        this.course = course;
-        this.bars = bars;
-        this.comboTiming = comboTiming;
-        this.audioPlayer = audioPlayer;
-        this.branch = branch;
+    get loaded() {
+        return this.audioPlayer && this.course && this.branch && this.bars && this.comboTiming;
     }
 
     play() {
-        const step = () => {
-            const currentTime = this.audioPlayer.getCurrentTime();
-            this.renderer.render(currentTime);
-
-            this.requestAnimationFrameId = requestAnimationFrame(step);
-        }
-        this.requestAnimationFrameId = requestAnimationFrame(step);
         this.audioPlayer.play();
+    }
+
+    pause() {
+        this.audioPlayer.pause();
     }
 
     seek(second: number) {
         this.audioPlayer.seek(second);
+    }
+
+    destroy(){
+        cancelAnimationFrame(this.requestAnimationFrameId)
     }
 }

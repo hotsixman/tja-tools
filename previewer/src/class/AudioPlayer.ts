@@ -51,6 +51,9 @@ export class AudioPlayer {
     play() {
         this.audio.play();
     }
+    pause() {
+        this.audio.pause();
+    }
     stop() {
         this.audio.pause();
         this.audio.currentTime = 0;
@@ -60,5 +63,8 @@ export class AudioPlayer {
     }
     getCurrentTime() {
         return this.audio.currentTime + Math.min(this.offset, 0) - getDefaultDelay(this.bpm);
+    }
+    destroy() {
+        this.audio.remove();
     }
 }
