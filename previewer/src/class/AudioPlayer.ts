@@ -21,7 +21,7 @@ export class AudioPlayer {
             }
             offsetAppliedHitSoundDatas.push({
                 type: e.type,
-                timing: newTiming + getDefaultDelay(bpm)
+                timing: newTiming + Math.max(0, offset) + getDefaultDelay(bpm)
             })
         })
         audioBuffer = await mergeBuffersWithOverlays(audioContext, audioBuffer, offsetAppliedHitSoundDatas);
