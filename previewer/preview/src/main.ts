@@ -1,13 +1,13 @@
 import { Course, Song } from 'tja-parser';
 import { Previewer } from '../../src/index.ts';
-import soundURL from './tokimeki.ogg?url';
-import tjaURL from './tokimeki.tja?url';
+import soundURL from './tja/FLOWER.ogg?url';
+import tjaURL from './tja/Flower.tja?url';
 
 const soundArrayBuffer = await fetch(soundURL).then((e) => e.arrayBuffer());
 const tja = await fetch(tjaURL).then(e => e.text());
 
 const song = Song.parse(tja);
-const oni = song.course.oni as Course;
+const oni = song.course.edit as Course;
 const canvas = document.createElement('canvas');
 canvas.width = 1920;
 canvas.height = canvas.width / 4;

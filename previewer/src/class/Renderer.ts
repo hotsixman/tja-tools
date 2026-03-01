@@ -1,4 +1,4 @@
-import { Bar, HitNote, Note } from "tja-parser";
+import { BalloonNote, Bar, HitNote, Note, RollNote } from "tja-parser";
 import type { Previewer } from "./Previewer";
 
 export class Renderer {
@@ -67,11 +67,12 @@ export class Renderer {
     }
 
     renderNote(note: Note, time: number) {
-        const xCoor = this.getXCoor(note.getTimingMS() / 1000, time, note.getBPM(), note.getScroll());
-        if (time > note.getTimingMS() / 1000) {
-            return;
-        }
         if (note instanceof HitNote) {
+            if (time > note.getTimingMS() / 1000) {
+                return;
+            }
+            const xCoor = this.getXCoor(note.getTimingMS() / 1000, time, note.getBPM(), note.getScroll());
+
             const ctx = this.ctx;
             let isBig = note.type === Note.Type.DON_BIG || note.type === Note.Type.KA_BIG;
             let radius = isBig ? this.noteRadius * 1.3 : this.noteRadius;
@@ -99,6 +100,105 @@ export class Renderer {
             ctx.lineWidth = 0; // isBig ? radius * (1 - 1 / (4 * 1.3)) : radius * (1 - 1 / 4)
             ctx.arc(xCoor, this.canvas.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
             ctx.fillStyle = color ?? '';
+            ctx.fill();
+            ctx.closePath();
+        }
+        else if (note instanceof BalloonNote) {
+            let xCoor: number;
+            if (time < note.getTimingMS() / 1000) {
+                xCoor = this.getXCoor(note.getTimingMS() / 1000, time, note.getBPM(), note.getScroll())
+            }
+            else if (time < note.getEnd().valueOf() / 1000) {
+                xCoor = this.hitXCoor
+            }
+            else {
+                xCoor = this.getXCoor(note.getEnd().valueOf() / 1000, time, note.getBPM(), note.getScroll())
+            }
+
+            let radius = this.noteRadius;
+            if (xCoor < 0 - radius * 2) return;
+            if (xCoor > this.canvas.width + radius * 2) return true;
+
+            const ctx = this.ctx;
+            const color = '#f97900';
+            // 검은색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(xCoor, this.canvas.height / 2, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            ctx.closePath();
+            // 회색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(xCoor, this.canvas.height / 2, this.noteRadius ? radius * (1 - 1 / (12 * 1.3)) : radius * (1 - 1 / 12), 0, 2 * Math.PI);
+            ctx.fillStyle = '#ece7d9';
+            ctx.fill();
+            ctx.closePath();
+            // 안에
+            ctx.beginPath();
+            ctx.lineWidth = 0; // isBig ? radius * (1 - 1 / (4 * 1.3)) : radius * (1 - 1 / 4)
+            ctx.arc(xCoor, this.canvas.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color ?? '';
+            ctx.fill();
+            ctx.closePath();
+        }
+        else if (note instanceof RollNote) {
+            const isBig = note.type === Note.Type.ROLL_BIG;
+            const radius = isBig ? this.noteRadius * 1.3 : this.noteRadius;
+
+            const startXCoor = this.getXCoor(note.getTimingMS() / 1000, time, note.getBPM(), note.getScroll());
+            const endXCoor = this.getXCoor(note.getEnd().valueOf() / 1000, time, note.getBPM(), note.getScroll());
+
+            if (endXCoor < 0 - radius * 2) return false;
+            if (startXCoor > this.canvas.width + radius * 2) return true;
+
+            const startX = Math.max(startXCoor, 0);
+            const endX = Math.min(endXCoor, this.canvas.width);
+            const color = '#f7b800';
+            const lineWidth = this.noteRadius / 12;
+            const halfWidth = lineWidth / 2;
+            const ctx = this.ctx;
+
+            ctx.beginPath();
+            ctx.lineWidth = lineWidth;
+            // 윗 변
+            ctx.moveTo(startX, this.canvas.height / 2 - radius + halfWidth);
+            ctx.lineTo(endX, this.canvas.height / 2 - radius + halfWidth);
+            // 오른쪽 호
+            ctx.arc(endX, this.canvas.height / 2, radius - halfWidth, Math.PI * -1 * 0.5, Math.PI * 0.5);
+            // 밑 변
+            ctx.moveTo(endX, this.canvas.height / 2 + radius - halfWidth);
+            ctx.lineTo(startX, this.canvas.height / 2 + radius - halfWidth);
+            // 왼쪽 호
+            ctx.arc(startX, this.canvas.height / 2, radius - halfWidth, Math.PI * 0.5, Math.PI * 1.5);
+            // 채우기
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            ctx.closePath();
+
+            // 시작점 그리기
+            // 검은색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(startXCoor, this.canvas.height / 2, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            ctx.closePath();
+            // 회색 테두리
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(startXCoor, this.canvas.height / 2, isBig ? radius * (1 - 1 / (12 * 1.3)) : radius * (1 - 1 / 12), 0, 2 * Math.PI);
+            ctx.fillStyle = '#ece7d9';
+            ctx.fill();
+            ctx.closePath();
+            // 안에
+            ctx.beginPath();
+            ctx.lineWidth = 0;
+            ctx.arc(startXCoor, this.canvas.height / 2, radius * 3 / 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
             ctx.fill();
             ctx.closePath();
         }
