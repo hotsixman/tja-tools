@@ -3,7 +3,7 @@
   "workspaces": {
     "": {
       "dependencies": {
-        "tja-parser": "^0.2.3",
+        "tja-parser": "0.2.7",
       },
       "devDependencies": {
         "@types/bun": "^1.3.9",
@@ -35,7 +35,7 @@
 
     "tiny-emitter": ["tiny-emitter@2.1.0", "", {}, "sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q=="],
 
-    "tja-parser": ["tja-parser@0.2.3", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-hjIgdTcyXKx8TQ/3CMuqc5jlG7pEYmYo3TpLITAkkHIjFwq3GxHXV4E94BH9QcpL3KYf2/9wTbmeFf7tRoeMzA=="],
+    "tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
 
     "typed-function": ["typed-function@4.2.2", "", {}, "sha512-VwaXim9Gp1bngi/q3do8hgttYn2uC3MoT/gfuMWylnj1IeZBUAyPddHZlo1K05BDoj8DYPpMdiHqH1dDYdJf2A=="],
 

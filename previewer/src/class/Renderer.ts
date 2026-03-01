@@ -60,8 +60,8 @@ export class Renderer {
             this.ctx.fillRect(xCoor - 1, (this.canvas.height - this.courseHeight) / 2, 2, this.courseHeight);
         }
         this.ctx.fillStyle = "white";
-        const fontSize = this.courseHeight / 15;
-        this.ctx.font = `${fontSize}px sans-serif`;
+        const fontSize = this.courseHeight / 13;
+        this.ctx.font = `bold ${fontSize}px sans-serif`;
         const textWidth = this.ctx.measureText(index.toString()).width;
         this.ctx.fillText(index.toString(), xCoor - textWidth / 2, (this.canvas.height - this.courseHeight - fontSize) / 2);
     }
@@ -142,6 +142,12 @@ export class Renderer {
             ctx.fillStyle = color ?? '';
             ctx.fill();
             ctx.closePath();
+
+            ctx.fillStyle = "white";
+            const fontSize = this.noteRadius / 1.5;
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            const metrics = ctx.measureText(note.getCount().toString());
+            ctx.fillText(note.getCount().toString(), xCoor - metrics.width / 2, (this.canvas.height + metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2)
         }
         else if (note instanceof RollNote) {
             const isBig = note.type === Note.Type.ROLL_BIG;

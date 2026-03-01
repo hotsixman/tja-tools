@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "tja-parser": "^0.2.3"
+    "tja-parser": "0.2.7"
   },
   "devDependencies": {
     "@types/bun": "^1.3.9"

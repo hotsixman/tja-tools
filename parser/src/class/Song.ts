@@ -11,7 +11,7 @@ export class Song {
             line = line.trim()
             const doubleSlashIndex = line.indexOf('//');
             if (doubleSlashIndex > -1) {
-                return line.slice(0, doubleSlashIndex);
+                return line.slice(0, doubleSlashIndex).trim();
             }
             else {
                 return line;
