@@ -64,7 +64,35 @@ export class Course {
     private static parseBar(lines: string[], getNextBalloon: () => number, bpmInit: number): NoteGroup[] {
         const lineGroups = this.groupLines(lines);
 
-        return this.convertLineGroupToNoteGroup(lineGroups, getNextBalloon, bpmInit).noteGroups;
+        const noteGroups = this.convertLineGroupToNoteGroup(lineGroups, getNextBalloon, bpmInit).noteGroups;
+        const barGroups: Bar[][] = [];
+        let currentBarGroup: Bar[] = [];
+        noteGroups.forEach((noteGroup) => {
+            if (noteGroup instanceof Bar) {
+                currentBarGroup.push(noteGroup);
+            }
+            else if (noteGroup instanceof Branch) {
+                barGroups.push(currentBarGroup);
+                currentBarGroup = [];
+                if (noteGroup.normal) {
+                    barGroups.push(noteGroup.normal)
+                }
+                if (noteGroup.advanced) {
+                    barGroups.push(noteGroup.advanced)
+                }
+                if (noteGroup.master) {
+                    barGroups.push(noteGroup.master)
+                }
+            }
+        });
+        if (currentBarGroup.length) {
+            barGroups.push(currentBarGroup);
+        }
+        barGroups.forEach((barGroup) => {
+            this.setRollEnd(barGroup)
+        });
+
+        return noteGroups;
     }
 
     /**
@@ -146,7 +174,6 @@ export class Course {
 
     /**
      * `LineGroup`을 `NoteGroup`으로 변환
-     * @todo 연타노트 종료 타이밍 계산을 분리
      */
     private static convertLineGroupToNoteGroup(
         lineGroups: (Course.LineGroup | Course.BranchedLineGroup)[],
@@ -271,7 +298,6 @@ export class Course {
                     bar.setEnd(currentTiming);
 
                     // 노트의 delay와 연타 노트의 end 조정
-                    let rollEnd: math.Fraction | null = null;
                     let delaySum: math.Fraction = math.fraction(0);
                     let lengthSum: number = 1;
                     for (let i = notes.length - 1; i >= 0; i--) {
@@ -282,7 +308,6 @@ export class Course {
                         }
                         else if (note instanceof RollEndNote) {
                             delaySum = math.add(delaySum, note.getDelay());
-                            rollEnd = note.getTiming();
                             lengthSum++;
                         }
                         else if (note instanceof HitNote) {
@@ -296,13 +321,11 @@ export class Course {
                             note.setNoteLength(lengthSum);
                             delaySum = math.fraction(0);
                             lengthSum = 1;
-                            note.end = rollEnd ? rollEnd : note.getTiming();
-                            rollEnd = null;
                         }
                     }
 
                     items = items.filter((item) => {
-                        if (item instanceof EmptyNote || item instanceof RollEndNote) {
+                        if (item instanceof EmptyNote) {
                             return false;
                         }
                         return true;
@@ -348,6 +371,35 @@ export class Course {
             currentScroll,
             barlineHidden
         }
+    }
+
+    /**
+     * RollEndNote를 확인하고 앞의 RollNote의 end 타이밍을 설정. 그리고 RollNote를 제거
+     */
+    private static setRollEnd(barGroups: Bar[]) {
+        const notes = barGroups.flatMap((bar) => bar.getNotes());
+
+        let rollEnd: math.Fraction | null = null;
+        notes.toReversed().forEach((note) => {
+            if (note instanceof RollEndNote) {
+                rollEnd = note.getTiming();
+            }
+            else if (note instanceof RollNote) {
+                note.end = rollEnd ? rollEnd : note.getTiming();
+                rollEnd = null;
+            }
+        });
+
+        barGroups.forEach((bar) => {
+            const items = bar.getItems().filter((item) => {
+                if (item instanceof RollEndNote) {
+                    return false;
+                }
+                return true;
+            });
+            bar.clearItems();
+            bar.pushItem(...items)
+        });
     }
 
     difficulty: Difficulty;

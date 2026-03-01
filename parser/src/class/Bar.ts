@@ -18,6 +18,11 @@ export class Bar extends NoteGroup {
         this.notes.push(...items.filter((item) => item instanceof Note));
         this.commands.push(...items.filter((item) => item instanceof Command));
     }
+    clearItems() {
+        this.items = [];
+        this.notes = [];
+        this.commands = [];
+    }
     getItems() {
         return Array.from(this.items);
     }
