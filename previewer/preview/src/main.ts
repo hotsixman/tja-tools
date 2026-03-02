@@ -1,7 +1,7 @@
 import { Course, Song } from 'tja-parser';
 import { Previewer } from '../../src/index.ts';
-import soundURL from './tja/沓の子を打つ.ogg?url';
-import tjaURL from './tja/沓の子を打つ.tja?url';
+import soundURL from './tja/!!!カオスタイム!!!.ogg?url';
+import tjaURL from './tja/!!!カオスタイム!!!.tja?url';
 
 const soundArrayBuffer = await fetch(soundURL).then((e) => e.arrayBuffer());
 const tja = await fetch(tjaURL).then(e => e.text());
@@ -15,3 +15,5 @@ canvas.style.width = "100%";
 document.body.appendChild(canvas);
 const previewer = new Previewer(canvas);
 await previewer.load(oni, 'master', soundArrayBuffer);
+
+window.previewer = previewer;

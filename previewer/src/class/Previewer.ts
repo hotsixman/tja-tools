@@ -1,7 +1,7 @@
 import { Bar, Branch, Course, HitNote, Note, NoteGroup } from "tja-parser";
 import { Renderer } from "./Renderer";
 import { AudioPlayer } from "./AudioPlayer";
-import type { HitSoundData } from "../types";
+import type { HitSoundData, PreviewMode } from "../types";
 
 export class Previewer {
     renderer: Renderer;
@@ -14,6 +14,7 @@ export class Previewer {
     comboTiming: number[] | null = null;
 
     requestAnimationFrameId: number | null = null;
+    mode: PreviewMode = { type: "normal", scroll: 1 };
 
     constructor(canvas: HTMLCanvasElement) {
         this.renderer = new Renderer(this, canvas);
@@ -105,7 +106,28 @@ export class Previewer {
         this.audioPlayer.seek(second);
     }
 
-    destroy(){
+    destroy() {
         cancelAnimationFrame(this.requestAnimationFrameId)
+    }
+
+    setMode(type: "normal" | "fixedScroll", scroll: number): void
+    setMode(type: "fixedBPM", bpm: number): void
+    setMode(type: PreviewMode['type'], num: number): void {
+        if (type === "normal" || type === "fixedScroll") {
+            this.mode = {
+                type,
+                scroll: num
+            }
+        }
+        else {
+            this.mode = {
+                type,
+                BPM: num
+            }
+        }
+    }
+
+    getMode() {
+        return this.mode;
     }
 }

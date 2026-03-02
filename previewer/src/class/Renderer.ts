@@ -211,7 +211,16 @@ export class Renderer {
     }
 
     getXCoor(timing: number, time: number, bpm: number, scroll: number) {
-        return this.hitXCoor + ((timing - time) * (this.canvas.width) * (scroll.valueOf() * bpm.valueOf() / 240));
+        const mode = this.previewer.getMode();
+        if(mode.type === "normal"){
+            return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.scroll * scroll.valueOf() * bpm.valueOf() / 240));
+        }
+        else if(mode.type === "fixedScroll"){
+            return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.scroll * bpm.valueOf() / 240));
+        }
+        else{
+            return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.BPM / 240));
+        }
     }
 
     get courseWidth() {
