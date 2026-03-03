@@ -5,7 +5,7 @@
       "name": "site",
       "dependencies": {
         "tja-parser": "^0.2.7",
-        "tja-previewer": "0.1.2",
+        "tja-previewer": "0.1.3",
         "vite-plugin-singlefile": "^2.3.0",
       },
       "devDependencies": {
@@ -230,7 +230,7 @@
 
     "tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
 
-    "tja-previewer": ["tja-previewer@0.1.2", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-KcEVMeZzSS29okctzMV7xsokhI47CdPVPFsXWNB3+Cne1wtAbt6+dn/PH9VcrRfEaJ/08snqxRQcWrMyimllbQ=="],
+    "tja-previewer": ["tja-previewer@0.1.3", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-Xbc9lS9zXcCyowEd0x+kzV1k81eYv6IGUFB5OyiHsG24TlkGPlP4KKxnO6bDA+gNFJ0rpA4MdZOD3MpLSuZDmw=="],
 
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
 
