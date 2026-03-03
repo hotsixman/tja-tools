@@ -1,20 +1,63 @@
-import { Bar, Branch, Course, HitNote, Note } from "tja-parser";
-import { Renderer } from "./Renderer";
-import { AudioPlayer } from "./AudioPlayer";
-import type { HitSoundData } from "../types";
+import { Bar, BPMChangeCommand, Branch, Course, HitNote, Note, NoteGroup, ScrollCommand } from "tja-parser";
+import { Renderer } from "./Renderer.js";
+import { AudioPlayer } from "./AudioPlayer.js";
+import type { BPMChangeData, HitSoundData, PreviewMode, ScrollChangeData } from "../types.js";
 
 export class Previewer {
-    static async getInstance(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer, canvas: HTMLCanvasElement) {
+    renderer: Renderer;
+    audioPlayer: AudioPlayer | null = null;
+
+    course: Course | null = null;
+    branch: 'normal' | 'advanced' | 'master' | null = null;
+
+    bars: Bar[] | null = null;
+    comboTiming: number[] | null = null;
+    BPMChangeTiming: BPMChangeData[] | null = null;
+    scrollChangeTiming: ScrollChangeData[] | null = null;
+
+    requestAnimationFrameId: number | null = null;
+    mode: PreviewMode = { type: "normal", scroll: 1 };
+
+    constructor(canvas: HTMLCanvasElement) {
+        this.renderer = new Renderer(this, canvas);
+
+        const step = () => {
+            const currentTime = this.audioPlayer?.getCurrentTime() ?? -100;
+            this.renderer.render(currentTime);
+            this.requestAnimationFrameId = requestAnimationFrame(step);
+        }
+        this.requestAnimationFrameId = requestAnimationFrame(step);
+    }
+
+    async load(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer) {
+        const { bars, comboTiming, hitSoundDatas, BPMChangeTiming, scrollChangeTiming } = this.getBars(course.noteGroups, branch);
+
+        const songOffset = Number(course.song?.metadata.offset || 0) || 0;
+        const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
+        const audioPlayer = await AudioPlayer.getInstance(audioFile, hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
+
+        this.audioPlayer = audioPlayer;
+        this.course = course;
+        this.branch = branch;
+        this.bars = bars;
+        this.comboTiming = comboTiming;
+        this.BPMChangeTiming = BPMChangeTiming;
+        this.scrollChangeTiming = scrollChangeTiming;
+    }
+
+    private getBars(noteGroups: NoteGroup[], branch: 'normal' | 'advanced' | 'master') {
+        this.audioPlayer?.destroy();
+        this.audioPlayer = null;
+
         const hitSoundDatas: HitSoundData[] = [];
         const comboTiming: number[] = [];
-
+        const BPMChangeTiming: BPMChangeData[] = [];
+        const scrollChangeTiming: ScrollChangeData[] = [];
         const bars: Bar[] = [];
-        let barIndex = 0;
-        course.noteGroups.forEach((noteGroup) => {
+
+        noteGroups.forEach((noteGroup) => {
             if (noteGroup instanceof Bar) {
                 bars.push(noteGroup);
-                this.barProcess(noteGroup, hitSoundDatas, comboTiming);
-                barIndex++;
             }
             else if (noteGroup instanceof Branch) {
                 let barGroup: Bar[] | undefined;
@@ -31,72 +74,140 @@ export class Previewer {
                 if (barGroup) {
                     barGroup.forEach((bar) => {
                         bars.push(bar);
-                        this.barProcess(bar, hitSoundDatas, comboTiming);
-                        barIndex++;
                     })
                 }
             }
         });
 
-        const songOffset = Number(course.song?.metadata.offset || 0) || 0;
-        const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
-        const audioPlayer = await AudioPlayer.getInstance(audioFile, hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
+        bars.forEach((bar) => {
+            bar.getNotes().forEach((note) => {
+                if (note instanceof HitNote) {
+                    const timing = note.getTimingMS() / 1000;
 
-        return new Previewer(course, branch, bars, comboTiming, audioPlayer, canvas);
-    }
-
-    static barProcess(bar: Bar, hitSoundDatas: HitSoundData[], comboTiming: number[]) {
-        bar.getNotes().forEach((note) => {
-            if (note instanceof HitNote) {
-                const timing = note.getTimingMS() / 1000;
-
-                hitSoundDatas.push({
-                    timing,
-                    type: (note.type === Note.Type.DON_SMALL || note.type === Note.Type.DON_BIG) ? 'don' : 'ka'
-                });
-                comboTiming.push(timing);
-            }
+                    hitSoundDatas.push({
+                        timing,
+                        type: (note.type === Note.Type.DON_SMALL || note.type === Note.Type.DON_BIG) ? 'don' : 'ka'
+                    });
+                    comboTiming.push(timing);
+                }
+            });
+            bar.getCommands().forEach((command) => {
+                if (command instanceof BPMChangeCommand) {
+                    BPMChangeTiming.push({
+                        timing: command.getTimingMS() / 1000,
+                        BPM: command.value
+                    });
+                }
+                else if (command instanceof ScrollCommand) {
+                    scrollChangeTiming.push({
+                        timing: command.getTimingMS() / 1000,
+                        scroll: command.value
+                    });
+                }
+            })
         });
+
+        return { bars, comboTiming, hitSoundDatas, BPMChangeTiming, scrollChangeTiming }
     }
 
-    renderer: Renderer;
-    course: Course;
-    branch: 'normal' | 'advanced' | 'master';
-    audioPlayer: AudioPlayer;
-
-    bars: Bar[];
-    comboTiming: number[];
-
-    requestAnimationFrameId: number | null = null;
-
-    private constructor(
-        course: Course,
-        branch: 'normal' | 'advanced' | 'master',
-        bars: Bar[],
-        comboTiming: number[],
-        audioPlayer: AudioPlayer,
-        canvas: HTMLCanvasElement
-    ) {
-        this.renderer = new Renderer(this, canvas);
-        this.course = course;
-        this.bars = bars;
-        this.comboTiming = comboTiming;
-        this.audioPlayer = audioPlayer;
-        this.branch = branch;
+    get loaded() {
+        return this.audioPlayer && this.course && this.branch && this.bars && this.comboTiming && this.BPMChangeTiming && this.scrollChangeTiming;
     }
 
     play() {
-        const step = () => {
-            const currentTime = this.audioPlayer.getCurrentTime();
-            this.renderer.render(currentTime);
-
-            this.requestAnimationFrameId = requestAnimationFrame(step);
-        }
-        this.requestAnimationFrameId = requestAnimationFrame(step);
         this.audioPlayer.play();
+    }
+
+    pause() {
+        this.audioPlayer.pause();
     }
 
     seek(second: number) {
         this.audioPlayer.seek(second);
+    }
+
+    destroy() {
+        cancelAnimationFrame(this.requestAnimationFrameId)
+    }
+
+    setMode(type: "normal" | "fixedScroll", scroll: number): void
+    setMode(type: "fixedBPM", bpm: number): void
+    setMode(type: PreviewMode['type'], num: number): void {
+        if (type === "normal" || type === "fixedScroll") {
+            this.mode = {
+                type,
+                scroll: num
+            }
+        }
+        else {
+            this.mode = {
+                type,
+                BPM: num
+            }
+        }
+    }
+
+    getMode() {
+        return this.mode;
+    }
+
+    getCurrentCombo(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.comboTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.comboTiming[mid] <= time && time < (this.comboTiming[mid + 1] ?? Infinity)) {
+                return mid + 1; // 찾은 경우 인덱스 반환
+            } else if (this.comboTiming[mid] < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return 0; // 못 찾은 경우
+    }
+
+    getCurrentBPM(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.BPMChangeTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.BPMChangeTiming[mid].timing <= time && time < (this.BPMChangeTiming[mid + 1]?.timing ?? Infinity)) {
+                return this.BPMChangeTiming[mid].BPM; // 찾은 경우 인덱스 반환
+            } else if (this.BPMChangeTiming[mid].timing < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return this.course.song.getBPM(); // 못 찾은 경우
+    }
+
+    getCurrentScroll(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.scrollChangeTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.scrollChangeTiming[mid].timing <= time && time < (this.scrollChangeTiming[mid + 1]?.timing ?? Infinity)) {
+                return this.scrollChangeTiming[mid].scroll; // 찾은 경우 인덱스 반환
+            } else if (this.scrollChangeTiming[mid].timing < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return 1; // 못 찾은 경우
     }
 }

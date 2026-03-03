@@ -1,5 +1,5 @@
-import type { HitSoundData } from "../types";
-import { applyOffsetToBuffer, audioBufferToWav, extendAudioBuffer, getDefaultDelay, mergeBuffersWithOverlays } from "../util";
+import type { HitSoundData } from "../types.js";
+import { applyOffsetToBuffer, audioBufferToWav, extendAudioBuffer, getDefaultDelay, mergeBuffersWithOverlays } from "../util.js";
 
 export class AudioPlayer {
     static async getInstance(audioFile: ArrayBuffer, hitSoundDatas: HitSoundData[], offset: number, bpm: number, lastBarEndTiming: number) {
@@ -21,7 +21,7 @@ export class AudioPlayer {
             }
             offsetAppliedHitSoundDatas.push({
                 type: e.type,
-                timing: newTiming + getDefaultDelay(bpm)
+                timing: newTiming + Math.max(0, offset) + getDefaultDelay(bpm)
             })
         })
         audioBuffer = await mergeBuffersWithOverlays(audioContext, audioBuffer, offsetAppliedHitSoundDatas);
@@ -51,6 +51,9 @@ export class AudioPlayer {
     play() {
         this.audio.play();
     }
+    pause() {
+        this.audio.pause();
+    }
     stop() {
         this.audio.pause();
         this.audio.currentTime = 0;
@@ -60,5 +63,8 @@ export class AudioPlayer {
     }
     getCurrentTime() {
         return this.audio.currentTime + Math.min(this.offset, 0) - getDefaultDelay(this.bpm);
+    }
+    destroy() {
+        this.audio.remove();
     }
 }

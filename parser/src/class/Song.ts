@@ -7,7 +7,16 @@ export class Song {
      * @throws {MetadataParseException}
      */
     static parse(tja: string): Song {
-        const lines = tja.split('\n').map((e) => e.trim()).filter((e) => e);
+        const lines = tja.split('\n').map((line) => {
+            line = line.trim()
+            const doubleSlashIndex = line.indexOf('//');
+            if (doubleSlashIndex > -1) {
+                return line.slice(0, doubleSlashIndex).trim();
+            }
+            else {
+                return line;
+            }
+        }).filter((e) => e);
 
         const metadata = new this.Metadata();
         const song = new Song(metadata);
@@ -61,11 +70,11 @@ export class Song {
      * `metadata`에서 bpm을 가져옴.
      * `metadata`에 bpm이 존재하지 않으면 `160`을 반환.
      */
-    getBPM(){
+    getBPM() {
         return Number(this.metadata.bpm) || 160;
     }
 
-    toJSON(){
+    toJSON() {
         return {
             metadata: this.metadata,
             course: this.course

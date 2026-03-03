@@ -1,17 +1,34 @@
 import { Course, Song } from 'tja-parser';
 import { Previewer } from '../../src/index.ts';
-import soundURL from './igallta.ogg?url';
-import tjaURL from './Igallta.tja?url';
+import soundURL from './tja/Turkish March.ogg?url';
+import tjaURL from './tja/Turkish March.tja?url';
 
 const soundArrayBuffer = await fetch(soundURL).then((e) => e.arrayBuffer());
 const tja = await fetch(tjaURL).then(e => e.text());
 
 const song = Song.parse(tja);
-const oni = song.course.oni as Course;
+const oni = (song.course.edit ?? song.course.oni) as Course;
 const canvas = document.createElement('canvas');
-canvas.width = window.innerWidth - 50;
-canvas.height = canvas.width * 150 / 1000;
+canvas.width = 1920;
+canvas.height = canvas.width / 4;
+canvas.style.width = "100%";
 document.body.appendChild(canvas);
-const previewer = await Previewer.getInstance(oni, 'master', soundArrayBuffer, canvas);
+const previewer = new Previewer(canvas);
+await previewer.load(oni, 'master', soundArrayBuffer);
 
-window.play = () => { previewer.play() };
+const hs = document.createElement('input');
+const hsText = document.createElement('span');
+hsText.textContent = "1";
+hs.type = "range";
+hs.min = "0.5"
+hs.max = "4"
+hs.step = "0.1"
+hs.value = "1"
+hs.onchange = (ev) => {
+    previewer.setMode("normal", hs.valueAsNumber);
+    hsText.textContent = hs.value;
+};
+document.body.appendChild(hs);
+document.body.appendChild(hsText);
+
+window.previewer = previewer;
