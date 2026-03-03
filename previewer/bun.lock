@@ -3,7 +3,7 @@
   "workspaces": {
     "": {
       "dependencies": {
-        "tja-parser": "0.2.7",
+        "tja-parser": "0.2.8",
         "tja-previewer": "0.1.3",
       },
       "devDependencies": {
@@ -36,12 +36,14 @@
 
     "tiny-emitter": ["tiny-emitter@2.1.0", "", {}, "sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q=="],
 
-    "tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
+    "tja-parser": ["tja-parser@0.2.8", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-teN6gGhTnGksO3aCQ+KkK2whfc1GfIKaZGYnHcG+O0QZWGg2gOpXUBt9qPLJRqTIWKp+wRjvy3MtoFgitWDoWQ=="],
 
     "tja-previewer": ["tja-previewer@0.1.3", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-Xbc9lS9zXcCyowEd0x+kzV1k81eYv6IGUFB5OyiHsG24TlkGPlP4KKxnO6bDA+gNFJ0rpA4MdZOD3MpLSuZDmw=="],
 
     "typed-function": ["typed-function@4.2.2", "", {}, "sha512-VwaXim9Gp1bngi/q3do8hgttYn2uC3MoT/gfuMWylnj1IeZBUAyPddHZlo1K05BDoj8DYPpMdiHqH1dDYdJf2A=="],
 
     "undici-types": ["undici-types@7.18.2", "", {}, "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w=="],
+
+    "tja-previewer/tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
   }
 }
