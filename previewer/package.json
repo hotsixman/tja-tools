@@ -1,4 +1,9 @@
 {
+  "name": "tja-previewer",
+  "author": {
+    "name": "hotsixman"
+  },
+  "main": "./dist/index.js",
   "dependencies": {
     "tja-parser": "0.2.7"
   },

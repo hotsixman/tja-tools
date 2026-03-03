@@ -1,5 +1,5 @@
 import { BalloonNote, Bar, HitNote, Note, RollNote } from "tja-parser";
-import type { Previewer } from "./Previewer";
+import type { Previewer } from "./Previewer.js";
 
 export class Renderer {
     previewer: Previewer;

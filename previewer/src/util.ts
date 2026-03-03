@@ -1,6 +1,6 @@
-import { DON_SOUND } from "./assets/don";
-import { KA_SOUND } from "./assets/ka";
-import type { HitSoundData } from "./types";
+import { DON_SOUND } from "./assets/don.js";
+import { KA_SOUND } from "./assets/ka.js";
+import type { HitSoundData } from "./types.js";
 
 export function audioBufferToWav(audioBuffer: AudioBuffer) {
     const numChannels = audioBuffer.numberOfChannels;

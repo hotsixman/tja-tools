@@ -1,7 +1,7 @@
 import { Bar, Branch, Course, HitNote, Note, NoteGroup } from "tja-parser";
-import { Renderer } from "./Renderer";
-import { AudioPlayer } from "./AudioPlayer";
-import type { HitSoundData, PreviewMode } from "../types";
+import { Renderer } from "./Renderer.js";
+import { AudioPlayer } from "./AudioPlayer.js";
+import type { HitSoundData, PreviewMode } from "../types.js";
 
 export class Previewer {
     renderer: Renderer;

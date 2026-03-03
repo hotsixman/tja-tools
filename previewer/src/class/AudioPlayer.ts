@@ -1,5 +1,5 @@
-import type { HitSoundData } from "../types";
-import { applyOffsetToBuffer, audioBufferToWav, extendAudioBuffer, getDefaultDelay, mergeBuffersWithOverlays } from "../util";
+import type { HitSoundData } from "../types.js";
+import { applyOffsetToBuffer, audioBufferToWav, extendAudioBuffer, getDefaultDelay, mergeBuffersWithOverlays } from "../util.js";
 
 export class AudioPlayer {
     static async getInstance(audioFile: ArrayBuffer, hitSoundDatas: HitSoundData[], offset: number, bpm: number, lastBarEndTiming: number) {
