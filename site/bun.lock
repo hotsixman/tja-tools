@@ -4,8 +4,8 @@
     "": {
       "name": "site",
       "dependencies": {
-        "tja-parser": "^0.2.7",
-        "tja-previewer": "0.1.3",
+        "tja-parser": "^0.2.8",
+        "tja-previewer": "^0.1.4",
         "vite-plugin-singlefile": "^2.3.0",
       },
       "devDependencies": {
@@ -228,9 +228,9 @@
 
     "tinyglobby": ["tinyglobby@0.2.15", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.3" } }, "sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ=="],
 
-    "tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
+    "tja-parser": ["tja-parser@0.2.8", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-teN6gGhTnGksO3aCQ+KkK2whfc1GfIKaZGYnHcG+O0QZWGg2gOpXUBt9qPLJRqTIWKp+wRjvy3MtoFgitWDoWQ=="],
 
-    "tja-previewer": ["tja-previewer@0.1.3", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-Xbc9lS9zXcCyowEd0x+kzV1k81eYv6IGUFB5OyiHsG24TlkGPlP4KKxnO6bDA+gNFJ0rpA4MdZOD3MpLSuZDmw=="],
+    "tja-previewer": ["tja-previewer@0.1.4", "", { "dependencies": { "tja-parser": "0.2.8", "tja-previewer": "0.1.3" } }, "sha512-/6hY7B2ip+S85YzSqrGCBzhxfX6AzsxzKEs7+3WLN3QIyqrtANTDPaSgNTFRALeXgLjSFvrpEZ2/7A5Twvb9RQ=="],
 
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
 
@@ -249,5 +249,9 @@
     "zimmerframe": ["zimmerframe@1.1.4", "", {}, "sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ=="],
 
     "micromatch/picomatch": ["picomatch@2.3.1", "", {}, "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="],
+
+    "tja-previewer/tja-previewer": ["tja-previewer@0.1.3", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-Xbc9lS9zXcCyowEd0x+kzV1k81eYv6IGUFB5OyiHsG24TlkGPlP4KKxnO6bDA+gNFJ0rpA4MdZOD3MpLSuZDmw=="],
+
+    "tja-previewer/tja-previewer/tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
   }
 }
