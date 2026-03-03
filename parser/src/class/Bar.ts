@@ -62,8 +62,7 @@ export class Bar extends NoteGroup {
 
     toJSON(): any {
         return {
-            start: this.getStart().valueOf(),
-            end: this.getEnd().valueOf(),
+            ...super.toJSON(),
             items: this.items,
             notes: this.notes,
             commands: this.commands,

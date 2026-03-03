@@ -3,6 +3,7 @@ import * as math from 'mathjs';
 export abstract class NoteGroup {
     private start: math.Fraction;
     private end: math.Fraction;
+    sectionCommand: boolean = false;
 
     constructor(start: math.Fraction, end: math.Fraction) {
         this.start = start;
@@ -20,5 +21,16 @@ export abstract class NoteGroup {
     }
     setEnd(end: math.Fraction) {
         this.end = math.fraction(end);
+    }
+
+    toJSON() {
+        const ob: any = {
+            start: this.getStart().valueOf(),
+            end: this.getEnd().valueOf(),
+        }
+        if (this.sectionCommand) {
+            ob.sectionCommand = true;
+        }
+        return ob;
     }
 }

@@ -108,17 +108,22 @@ export class Course {
         let currentBar: LineGroup | null = null;
         let currentBranchedLineGroup: BranchedLineGroup | null = null;
         let currentCourse: 'normal' | 'advanced' | 'master' | null = null;
+        let sectionCommand = false;
         for (const line of lines) {
             if (line === "#START") continue;
             if (line === "#END") break;
 
             if (line.startsWith("#BRANCHSTART")) {
                 const branchRawDatas = line.replaceAll('#BRANCHSTART', '').split(',').map(e => e.trim()) as [string, string, string];
-                const type = branchRawDatas[0] === "r" ? Branch.Type.ROLL : Branch.Type.ACCURACY;
+                const type = branchRawDatas[0] === "p" ? Branch.Type.ROLL : Branch.Type.ACCURACY;
                 const criteria: [number, number] = [Number(branchRawDatas[1]) || 0, Number(branchRawDatas[2]) || 0];
 
                 currentCourse = null;
                 currentBranchedLineGroup = new BranchedLineGroup(type, criteria);
+                if(sectionCommand){
+                    currentBranchedLineGroup.sectionCommand = sectionCommand;
+                    sectionCommand = false;
+                }
                 currentBar = new LineGroup();
                 bars.push(currentBranchedLineGroup);
             }
@@ -142,10 +147,17 @@ export class Course {
                 currentBar = new LineGroup();
                 currentBranchedLineGroup?.addMaster(currentBar);
             }
+            else if (line === "#SECTION"){
+                sectionCommand = true;
+            }
             else {
                 if (!currentBar) {
                     currentBar = new LineGroup();
                     bars.push(currentBar);
+                }
+                if(sectionCommand){
+                    currentBar.sectionCommand = true;
+                    sectionCommand = false;
                 }
                 currentBar.add(line);
                 if (line.endsWith(',')) {
@@ -205,6 +217,7 @@ export class Course {
                 if (lineGroup.lines.length === 0) continue;
 
                 const bar = new Bar(math.fraction(currentTiming), math.fraction(currentTiming));
+                bar.sectionCommand = lineGroup.sectionCommand;
                 let noteCount = 0;
                 let items: Item[] = [];
                 for (const line of lineGroup.lines) {
@@ -337,6 +350,7 @@ export class Course {
             }
             else {
                 const branch = new Branch(lineGroup.type, lineGroup.criteria, math.fraction(currentTiming), math.fraction(currentTiming));
+                branch.sectionCommand = lineGroup.sectionCommand;
                 let result;
                 if (lineGroup.normal) {
                     result = this.convertLineGroupToNoteGroup(lineGroup.normal, getNextBalloon, currentBPM, currentTiming, currentMeasure, currentScroll, barlineHidden);
@@ -465,6 +479,7 @@ export namespace Course {
 
     export class LineGroup {
         lines: string[] = [];
+        sectionCommand: boolean = false;
         add(line: string) {
             this.lines.push(line);
         }
@@ -475,6 +490,7 @@ export namespace Course {
         normal?: LineGroup[];
         advanced?: LineGroup[];
         master?: LineGroup[];
+        sectionCommand: boolean = false;
 
         constructor(type: Branch.Type, criteria: [number, number]) {
             this.type = type;

@@ -17,8 +17,7 @@ export class Branch extends NoteGroup {
 
     toJSON() {
         return {
-            start: this.getStart().valueOf(),
-            end: this.getEnd().valueOf(),
+            ...super.toJSON(),
             normal: this.normal,
             advanced: this.advanced,
             master: this.master,

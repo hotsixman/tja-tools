@@ -3,7 +3,7 @@
   "author": {
     "name": "hotsixman"
   },
-  "version": "0.2.7",
+  "version": "0.2.8",
   "dependencies": {
     "mathjs": "^15.1.0"
   },
