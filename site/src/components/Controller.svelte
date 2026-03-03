@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Previewer } from "tja-previewer";
+    import type { Previewer, PreviewMode } from "tja-previewer";
     import type { Song, Course, Difficulty } from "tja-parser";
 
     interface Props {
@@ -23,11 +23,28 @@
     let playerContainer = $state<HTMLDivElement>();
     let audioPlayer = $state<HTMLAudioElement | null>(null);
     $effect(() => {
-        if(playerContainer && audioPlayer){
+        if (playerContainer && audioPlayer) {
             playerContainer.replaceChildren();
             playerContainer.appendChild(audioPlayer);
         }
-    })
+    });
+
+    let mode = $state<PreviewMode["type"]>("normal");
+    let scroll = $state<number>(1);
+    let bpm = $state<number>(song?.getBPM() ?? 200);
+    $effect(() => {
+        if (!previewer) return;
+        if (mode === "normal") {
+            previewer?.setMode("normal", scroll);
+        } else if (mode === "fixedScroll") {
+            previewer?.setMode("fixedScroll", scroll);
+        } else if (mode === "fixedBPM") {
+            previewer?.setMode("fixedBPM", bpm);
+        }
+    });
+    $effect(() => {
+        bpm = song?.getBPM() ?? 200;
+    });
 </script>
 
 <div class="container">
@@ -119,14 +136,13 @@
                         return;
                     }
 
-                    try{
+                    try {
                         await loadPreviewer(course, branch, audioFile.slice(0));
                         audioPlayer = previewer?.audioPlayer?.audio ?? null;
-                        alert("Preview loaded.")
-                    }
-                    catch(err){
+                        alert("Preview loaded.");
+                    } catch (err) {
                         console.error(err);
-                        alert("Error.")
+                        alert("Error.");
                     }
                 }}
             >
@@ -136,7 +152,35 @@
     </div>
     <div class="section">
         <div class="section-name">Player</div>
-        <div class="section-content" bind:this={playerContainer}>
+        <div class="section-content" bind:this={playerContainer}></div>
+    </div>
+    <div class="section">
+        <div class="section-name">Mode</div>
+        <div class="section-content">
+            <select bind:value={mode}>
+                <option value="normal" selected>Normal</option>
+                <option value="fixedScroll" selected>Fixed scroll</option>
+                <option value="fixedBPM" selected>Fixed BPM</option>
+            </select>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-name">
+            {mode === "fixedBPM" ? "Scroll BPM" : "Scroll speed"}
+        </div>
+        <div class="section-content">
+            {#if mode === "fixedBPM"}
+                <input type="number" bind:value={bpm} />
+            {:else}
+                {`${scroll.toFixed(1)}x`}
+                <input
+                    type="range"
+                    bind:value={scroll}
+                    min="0.1"
+                    max="4"
+                    step="0.1"
+                />
+            {/if}
         </div>
     </div>
 </div>

@@ -234,7 +234,7 @@ export class Renderer {
         const fontSize = this.courseHeight / 8;
         this.ctx.font = `bold ${fontSize}px sans-serif`;
 
-        const text = `BPM: ${BPM}`;
+        const text = `BPM: ${Number(BPM.toFixed(3)).toString()}`;
         const metrics = this.ctx.measureText(text);
 
         this.ctx.fillText(text, this.canvas.width / 100 * 16, (this.canvas.height + this.courseHeight + fontSize) / 2 + metrics.actualBoundingBoxAscent);
@@ -247,7 +247,7 @@ export class Renderer {
         const fontSize = this.courseHeight / 8;
         this.ctx.font = `bold ${fontSize}px sans-serif`;
 
-        const text = `Scroll: ${scroll}`;
+        const text = `Scroll: ${Number(scroll.toFixed(3)).toString()}`;
         const metrics = this.ctx.measureText(text);
 
         this.ctx.fillText(text, this.canvas.width / 100 * 31, (this.canvas.height + this.courseHeight + fontSize) / 2 + metrics.actualBoundingBoxAscent);
