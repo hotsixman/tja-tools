@@ -18,25 +18,28 @@ export class Renderer {
 
     render(time: number) {
         this.ctx.reset();
-        this.drawBackground();
-        this.drawHit();
+        this.renderBackground();
+        this.renderHit();
         if (!this.previewer.loaded) {
             return;
         }
         this.previewer.bars.toReversed().forEach((bar, i, a) => {
             const index = a.length - i;
             this.renderBar(bar, index, time);
-        })
+        });
+        this.renderCombo(time);
+        this.renderBPM(time);
+        this.renderScroll(time);
     }
 
-    drawBackground() {
+    renderBackground() {
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "#282828";
         this.ctx.fillRect(0, (this.canvas.height - this.courseHeight) / 2, this.canvas.width, this.courseHeight);
     }
 
-    drawHit() {
+    renderHit() {
         const color = 'gray';
         this.ctx.beginPath();
         this.ctx.arc(this.hitXCoor, this.canvas.height / 2, this.noteRadius, 0, 2 * Math.PI);
@@ -60,7 +63,7 @@ export class Renderer {
             this.ctx.fillRect(xCoor - 1, (this.canvas.height - this.courseHeight) / 2, 2, this.courseHeight);
         }
         this.ctx.fillStyle = "white";
-        const fontSize = this.courseHeight / 13;
+        const fontSize = this.courseHeight / 10;
         this.ctx.font = `bold ${fontSize}px sans-serif`;
         const textWidth = this.ctx.measureText(index.toString()).width;
         this.ctx.fillText(index.toString(), xCoor - textWidth / 2, (this.canvas.height - this.courseHeight - fontSize) / 2);
@@ -210,15 +213,55 @@ export class Renderer {
         }
     }
 
+    renderCombo(time: number) {
+        const combo = this.previewer.getCurrentCombo(time);
+        if (combo === null) return;
+
+        this.ctx.fillStyle = "white";
+        const fontSize = this.courseHeight / 8;
+        this.ctx.font = `bold ${fontSize}px sans-serif`;
+
+        const text = `Combo: ${combo}`;
+        const metrics = this.ctx.measureText(text);
+
+        this.ctx.fillText(text, this.canvas.width / 100, (this.canvas.height + this.courseHeight + fontSize) / 2 + metrics.actualBoundingBoxAscent);
+    }
+
+    renderBPM(time: number){
+        const BPM = this.previewer.getCurrentBPM(time);
+
+        this.ctx.fillStyle = "white";
+        const fontSize = this.courseHeight / 8;
+        this.ctx.font = `bold ${fontSize}px sans-serif`;
+
+        const text = `BPM: ${BPM}`;
+        const metrics = this.ctx.measureText(text);
+
+        this.ctx.fillText(text, this.canvas.width / 100 * 16, (this.canvas.height + this.courseHeight + fontSize) / 2 + metrics.actualBoundingBoxAscent);
+    }
+
+    renderScroll(time: number){
+        const scroll = this.previewer.getCurrentScroll(time);
+
+        this.ctx.fillStyle = "white";
+        const fontSize = this.courseHeight / 8;
+        this.ctx.font = `bold ${fontSize}px sans-serif`;
+
+        const text = `Scroll: ${scroll}`;
+        const metrics = this.ctx.measureText(text);
+
+        this.ctx.fillText(text, this.canvas.width / 100 * 31, (this.canvas.height + this.courseHeight + fontSize) / 2 + metrics.actualBoundingBoxAscent);
+    }
+
     getXCoor(timing: number, time: number, bpm: number, scroll: number) {
         const mode = this.previewer.getMode();
-        if(mode.type === "normal"){
+        if (mode.type === "normal") {
             return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.scroll * scroll.valueOf() * bpm.valueOf() / 240));
         }
-        else if(mode.type === "fixedScroll"){
+        else if (mode.type === "fixedScroll") {
             return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.scroll * bpm.valueOf() / 240));
         }
-        else{
+        else {
             return this.hitXCoor + ((timing - time) * (this.canvas.width) * (mode.BPM / 240));
         }
     }

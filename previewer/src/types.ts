@@ -10,3 +10,13 @@ export type PreviewMode =
         type: "fixedBPM",
         BPM: number
     };
+
+export type BPMChangeData = {
+    BPM: number,
+    timing: number
+}
+
+export type ScrollChangeData = {
+    scroll: number,
+    timing: number
+}

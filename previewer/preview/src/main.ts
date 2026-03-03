@@ -1,7 +1,7 @@
 import { Course, Song } from 'tja-parser';
 import { Previewer } from '../../src/index.ts';
-import soundURL from './tja/!!!カオスタイム!!!.ogg?url';
-import tjaURL from './tja/!!!カオスタイム!!!.tja?url';
+import soundURL from './tja/Turkish March.ogg?url';
+import tjaURL from './tja/Turkish March.tja?url';
 
 const soundArrayBuffer = await fetch(soundURL).then((e) => e.arrayBuffer());
 const tja = await fetch(tjaURL).then(e => e.text());
@@ -15,5 +15,20 @@ canvas.style.width = "100%";
 document.body.appendChild(canvas);
 const previewer = new Previewer(canvas);
 await previewer.load(oni, 'master', soundArrayBuffer);
+
+const hs = document.createElement('input');
+const hsText = document.createElement('span');
+hsText.textContent = "1";
+hs.type = "range";
+hs.min = "0.5"
+hs.max = "4"
+hs.step = "0.1"
+hs.value = "1"
+hs.onchange = (ev) => {
+    previewer.setMode("normal", hs.valueAsNumber);
+    hsText.textContent = hs.value;
+};
+document.body.appendChild(hs);
+document.body.appendChild(hsText);
 
 window.previewer = previewer;

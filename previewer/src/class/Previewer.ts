@@ -1,7 +1,7 @@
-import { Bar, Branch, Course, HitNote, Note, NoteGroup } from "tja-parser";
+import { Bar, BPMChangeCommand, Branch, Course, HitNote, Note, NoteGroup, ScrollCommand } from "tja-parser";
 import { Renderer } from "./Renderer.js";
 import { AudioPlayer } from "./AudioPlayer.js";
-import type { HitSoundData, PreviewMode } from "../types.js";
+import type { BPMChangeData, HitSoundData, PreviewMode, ScrollChangeData } from "../types.js";
 
 export class Previewer {
     renderer: Renderer;
@@ -12,6 +12,8 @@ export class Previewer {
 
     bars: Bar[] | null = null;
     comboTiming: number[] | null = null;
+    BPMChangeTiming: BPMChangeData[] | null = null;
+    scrollChangeTiming: ScrollChangeData[] | null = null;
 
     requestAnimationFrameId: number | null = null;
     mode: PreviewMode = { type: "normal", scroll: 1 };
@@ -28,7 +30,7 @@ export class Previewer {
     }
 
     async load(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer) {
-        const { bars, comboTiming, hitSoundDatas } = this.getBars(course.noteGroups, branch);
+        const { bars, comboTiming, hitSoundDatas, BPMChangeTiming, scrollChangeTiming } = this.getBars(course.noteGroups, branch);
 
         const songOffset = Number(course.song?.metadata.offset || 0) || 0;
         const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
@@ -39,6 +41,8 @@ export class Previewer {
         this.branch = branch;
         this.bars = bars;
         this.comboTiming = comboTiming;
+        this.BPMChangeTiming = BPMChangeTiming;
+        this.scrollChangeTiming = scrollChangeTiming;
     }
 
     private getBars(noteGroups: NoteGroup[], branch: 'normal' | 'advanced' | 'master') {
@@ -47,6 +51,8 @@ export class Previewer {
 
         const hitSoundDatas: HitSoundData[] = [];
         const comboTiming: number[] = [];
+        const BPMChangeTiming: BPMChangeData[] = [];
+        const scrollChangeTiming: ScrollChangeData[] = [];
         const bars: Bar[] = [];
 
         noteGroups.forEach((noteGroup) => {
@@ -85,13 +91,27 @@ export class Previewer {
                     comboTiming.push(timing);
                 }
             });
+            bar.getCommands().forEach((command) => {
+                if (command instanceof BPMChangeCommand) {
+                    BPMChangeTiming.push({
+                        timing: command.getTimingMS() / 1000,
+                        BPM: command.value
+                    });
+                }
+                else if (command instanceof ScrollCommand) {
+                    scrollChangeTiming.push({
+                        timing: command.getTimingMS() / 1000,
+                        scroll: command.value
+                    });
+                }
+            })
         });
 
-        return { bars, comboTiming, hitSoundDatas }
+        return { bars, comboTiming, hitSoundDatas, BPMChangeTiming, scrollChangeTiming }
     }
 
     get loaded() {
-        return this.audioPlayer && this.course && this.branch && this.bars && this.comboTiming;
+        return this.audioPlayer && this.course && this.branch && this.bars && this.comboTiming && this.BPMChangeTiming && this.scrollChangeTiming;
     }
 
     play() {
@@ -129,5 +149,65 @@ export class Previewer {
 
     getMode() {
         return this.mode;
+    }
+
+    getCurrentCombo(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.comboTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.comboTiming[mid] <= time && time < (this.comboTiming[mid + 1] ?? Infinity)) {
+                return mid + 1; // 찾은 경우 인덱스 반환
+            } else if (this.comboTiming[mid] < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return 0; // 못 찾은 경우
+    }
+
+    getCurrentBPM(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.BPMChangeTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.BPMChangeTiming[mid].timing <= time && time < (this.BPMChangeTiming[mid + 1]?.timing ?? Infinity)) {
+                return this.BPMChangeTiming[mid].BPM; // 찾은 경우 인덱스 반환
+            } else if (this.BPMChangeTiming[mid].timing < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return this.course.song.getBPM(); // 못 찾은 경우
+    }
+
+    getCurrentScroll(time: number) {
+        if (!this.loaded) return;
+
+        let left = 0;
+        let right = this.scrollChangeTiming.length - 1;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (this.scrollChangeTiming[mid].timing <= time && time < (this.scrollChangeTiming[mid + 1]?.timing ?? Infinity)) {
+                return this.scrollChangeTiming[mid].scroll; // 찾은 경우 인덱스 반환
+            } else if (this.scrollChangeTiming[mid].timing < time) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return 1; // 못 찾은 경우
     }
 }
