@@ -1,47 +1,62 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from "svelte";
+  import { Course, Song, type Difficulty } from "tja-parser";
+  import Previewer from "tja-previewer";
+  import Controller from "./components/Controller.svelte";
+
+  let canvas = $state<HTMLCanvasElement>();
+  let previewer = $state<Previewer>();
+  let song = $state<Song | null>(null);
+  let difficulties = $state<Difficulty[]>([]);
+
+  let canvasWidth = $state(window.innerWidth * (window.devicePixelRatio || 1));
+  let canvasHeight = $derived(canvasWidth / 5);
+
+  onMount(() => {
+    if (!canvas) return;
+    previewer = new Previewer(canvas);
+  });
+
+  function loadSong(tja: string) {
+    reset();
+    song = Song.parse(tja);
+    (["easy", "normal", "hard", "oni", "edit"] as const).forEach((diff) => {
+      if (song?.course[diff]) {
+        difficulties.push(diff);
+      }
+    });
+  }
+
+  async function loadPreviewer(
+    course: Course,
+    branch: "normal" | "advanced" | "master",
+    audioFile: ArrayBuffer,
+  ) {
+    if (!previewer) return;
+    await previewer.load(course, branch, audioFile);
+  }
+
+  function reset() {
+    difficulties = [];
+  }
+
+  $inspect(difficulties);
 </script>
 
 <main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <canvas bind:this={canvas} width={canvasWidth} height={canvasHeight}>
+  </canvas>
+  <Controller {difficulties} {previewer} {loadSong} {loadPreviewer} {song}/>
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
+
+  canvas {
+    width: 100%;
   }
 </style>

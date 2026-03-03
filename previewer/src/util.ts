@@ -136,8 +136,8 @@ export async function mergeBuffersWithOverlays(
     songVol: number = 100,
     seVol: number = 100,
 ): Promise<AudioBuffer> {
-    const donBuffer = await audioContext.decodeAudioData(DON_SOUND);
-    const kaBuffer = await audioContext.decodeAudioData(KA_SOUND);
+    const donBuffer = await audioContext.decodeAudioData(DON_SOUND.slice(0));
+    const kaBuffer = await audioContext.decodeAudioData(KA_SOUND.slice(0));
 
     const sampleRate = baseBuffer.sampleRate
     const channels = baseBuffer.numberOfChannels

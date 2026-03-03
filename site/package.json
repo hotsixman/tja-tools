@@ -17,5 +17,10 @@
     "svelte-check": "^4.3.4",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "tja-parser": "^0.2.7",
+    "tja-previewer": "0.1.2",
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }

@@ -33,7 +33,7 @@ export class AudioPlayer {
         const url = URL.createObjectURL(offsetAppliedAudioFile);
         const audio = new Audio(url);
         audio.controls = true;
-        document.body.appendChild(audio);
+        await audioContext.close();
 
         return new AudioPlayer(audio, offset, bpm);
     }
