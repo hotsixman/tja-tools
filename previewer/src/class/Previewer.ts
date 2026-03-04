@@ -2,6 +2,7 @@ import { Bar, BPMChangeCommand, Branch, Course, HitNote, Note, NoteGroup, Scroll
 import { Renderer } from "./Renderer.js";
 import { AudioPlayer } from "./AudioPlayer.js";
 import type { BPMChangeData, HitSoundData, PreviewMode, ScrollChangeData } from "../types.js";
+import { SILENT_OGG } from "../assets/silent.js";
 
 export class Previewer {
     renderer: Renderer;
@@ -29,12 +30,12 @@ export class Previewer {
         this.requestAnimationFrameId = requestAnimationFrame(step);
     }
 
-    async load(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile: ArrayBuffer) {
+    async load(course: Course, branch: 'normal' | 'advanced' | 'master', audioFile?: ArrayBuffer) {
         const { bars, comboTiming, hitSoundDatas, BPMChangeTiming, scrollChangeTiming } = this.getBars(course.noteGroups, branch);
 
         const songOffset = Number(course.song?.metadata.offset || 0) || 0;
         const lastBarEndTiming = bars[bars.length - 1].getEnd().valueOf() / 1000;
-        const audioPlayer = await AudioPlayer.getInstance(audioFile, hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
+        const audioPlayer = await AudioPlayer.getInstance(audioFile ?? SILENT_OGG.slice(0), hitSoundDatas, songOffset, course.getBPM(), lastBarEndTiming);
 
         this.audioPlayer = audioPlayer;
         this.course = course;

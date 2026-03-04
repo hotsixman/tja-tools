@@ -30,7 +30,7 @@
   async function loadPreviewer(
     course: Course,
     branch: "normal" | "advanced" | "master",
-    audioFile: ArrayBuffer,
+    audioFile?: ArrayBuffer,
   ) {
     if (!previewer) return;
     await previewer.load(course, branch, audioFile);

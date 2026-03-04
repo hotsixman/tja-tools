@@ -1,7 +1,7 @@
 import { Course, Song } from 'tja-parser';
 import { Previewer } from '../../src/index.ts';
-import soundURL from './tja/Turkish March.ogg?url';
-import tjaURL from './tja/Turkish March.tja?url';
+import soundURL from './tja/silent.ogg?url';
+import tjaURL from './tja/百鬼夜行.tja?url';
 
 const soundArrayBuffer = await fetch(soundURL).then((e) => e.arrayBuffer());
 const tja = await fetch(tjaURL).then(e => e.text());
@@ -15,6 +15,8 @@ canvas.style.width = "100%";
 document.body.appendChild(canvas);
 const previewer = new Previewer(canvas);
 await previewer.load(oni, 'master', soundArrayBuffer);
+
+document.body.append(previewer.audioPlayer.audio)
 
 const hs = document.createElement('input');
 const hsText = document.createElement('span');

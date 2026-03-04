@@ -9,7 +9,7 @@
         loadPreviewer: (
             course: Course,
             branch: "normal" | "advanced" | "master",
-            audioFile: ArrayBuffer,
+            audioFile?: ArrayBuffer,
         ) => Promise<void>;
         song: Song | null;
     }
@@ -122,10 +122,6 @@
                         alert("Tja not loaded.");
                         return;
                     }
-                    if (!audioFile) {
-                        alert("No song file.");
-                        return;
-                    }
                     if (!difficulty) {
                         alert("Please select course.");
                         return;
@@ -137,7 +133,7 @@
                     }
 
                     try {
-                        await loadPreviewer(course, branch, audioFile.slice(0));
+                        await loadPreviewer(course, branch, audioFile?.slice?.(0));
                         audioPlayer = previewer?.audioPlayer?.audio ?? null;
                         alert("Preview loaded.");
                     } catch (err) {
