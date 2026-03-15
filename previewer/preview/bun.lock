@@ -5,6 +5,7 @@
       "name": "preview",
       "dependencies": {
         "tja-parser": "0.2.9",
+        "tja-previewer": "0.1.6",
         "vite-plugin-singlefile": "^2.3.0",
       },
       "devDependencies": {
@@ -166,6 +167,8 @@
 
     "tja-parser": ["tja-parser@0.2.9", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-hRqsNz8FsQhoMELv8r9mnYkM6kQKarFNzQXYoE8xS+YYvL+3uzNjuFOlVZXebpaGxhAO1MEWjhUr5sy9y+3Mkw=="],
 
+    "tja-previewer": ["tja-previewer@0.1.6", "", { "dependencies": { "tja-parser": "0.2.9", "tja-previewer": "0.1.3" } }, "sha512-Tue3rH1OuYF/IGpH5tBy14K+KVfa0nQk8SRvtAD93FYs6XGSD0Sdg3OrdGpwSuCeKt9MCfvSyQsrvvbsJetaCQ=="],
+
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
 
     "typed-function": ["typed-function@4.2.2", "", {}, "sha512-VwaXim9Gp1bngi/q3do8hgttYn2uC3MoT/gfuMWylnj1IeZBUAyPddHZlo1K05BDoj8DYPpMdiHqH1dDYdJf2A=="],
@@ -177,5 +180,9 @@
     "vite-plugin-singlefile": ["vite-plugin-singlefile@2.3.0", "", { "dependencies": { "micromatch": "^4.0.8" }, "peerDependencies": { "rollup": "^4.44.1", "vite": "^5.4.11 || ^6.0.0 || ^7.0.0" } }, "sha512-DAcHzYypM0CasNLSz/WG0VdKOCxGHErfrjOoyIPiNxTPTGmO6rRD/te93n1YL/s+miXq66ipF1brMBikf99c6A=="],
 
     "micromatch/picomatch": ["picomatch@2.3.1", "", {}, "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="],
+
+    "tja-previewer/tja-previewer": ["tja-previewer@0.1.3", "", { "dependencies": { "tja-parser": "0.2.7" } }, "sha512-Xbc9lS9zXcCyowEd0x+kzV1k81eYv6IGUFB5OyiHsG24TlkGPlP4KKxnO6bDA+gNFJ0rpA4MdZOD3MpLSuZDmw=="],
+
+    "tja-previewer/tja-previewer/tja-parser": ["tja-parser@0.2.7", "", { "dependencies": { "mathjs": "^15.1.0" } }, "sha512-n0TnRhavGD6N2xysXLN93kEJ2F27FfHHMo2Qr75wdcsoqI4imNu5FV/bp9jYJS0GlqPV3OA36mrLQASf0Er/yQ=="],
   }
 }

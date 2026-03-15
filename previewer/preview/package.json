@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "tja-parser": "0.2.9",
+    "tja-previewer": "0.1.6",
     "vite-plugin-singlefile": "^2.3.0"
   }
 }
