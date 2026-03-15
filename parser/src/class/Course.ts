@@ -369,6 +369,7 @@ export class Course {
                     currentBPM = result.currentBPM;
                     currentTiming = result.currentTiming;
                     currentMeasure = result.currentMeasure;
+                    currentScroll = result.currentScroll;
                     barlineHidden = result.barlineHidden;
                     branch.setEnd(result.currentTiming);
                 }
